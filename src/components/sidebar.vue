@@ -81,9 +81,15 @@ const items = [
     permiss: '1'
   },
   {
+    icon: 'List',
+    index: '/execution',
+    title: '执行队列',
+    permiss: '1'
+  },
+  {
     icon: 'PieChart',
     index: '/report',
-    title: '报告管理',
+    title: '执行结果',
     permiss: '1'
   },
   {

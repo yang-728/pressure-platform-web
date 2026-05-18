@@ -86,6 +86,8 @@ getList();
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.srcName === '') query.srcName = null;
+  if (query.testCaseId === '') query.testCaseId = null;
   getList();
 };
 

@@ -67,6 +67,13 @@ export const stopTestCase = (id: number) => {
     });
 }
 
+export const stopExecution = (reportId: number) => {
+    return request({
+        url: '/testcase/stopExecution/' + reportId,
+        method: 'get'
+    });
+}
+
 export const syncNode = (nodeId: number) => {
     return request({
         url: '/testcase/syncNode/' + nodeId,

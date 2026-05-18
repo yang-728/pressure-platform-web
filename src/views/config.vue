@@ -8,7 +8,7 @@
         </template>
 
         <el-row :gutter="20">
-          <el-col :span="8">
+          <el-col :span="6">
             <div style="margin-bottom: 10px; font-weight: bold;">产品线</div>
             <div style="margin-bottom: 10px;">
               <el-tag
@@ -33,7 +33,7 @@
             </div>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :span="6">
             <div style="margin-bottom: 10px; font-weight: bold;">服务</div>
             <div style="margin-bottom: 10px;">
               <el-tag
@@ -58,7 +58,7 @@
             </div>
           </el-col>
 
-          <el-col :span="8">
+          <el-col :span="6">
             <div style="margin-bottom: 10px; font-weight: bold;">版本</div>
             <div style="margin-bottom: 10px;">
               <el-tag
@@ -80,6 +80,31 @@
                 @blur="handleAddOption('version')"
               />
               <el-button v-else size="small" @click="showInput('version')">+ 新增版本</el-button>
+            </div>
+          </el-col>
+
+          <el-col :span="6">
+            <div style="margin-bottom: 10px; font-weight: bold;">区域</div>
+            <div style="margin-bottom: 10px;">
+              <el-tag
+                v-for="(item, index) in regionOptions"
+                :key="index"
+                closable
+                @close="removeOption('region', item, index)"
+                style="margin-right: 8px; margin-bottom: 5px;"
+              >
+                {{ item }}
+              </el-tag>
+              <el-input
+                v-if="regionInputVisible"
+                ref="regionInputRef"
+                v-model="regionInputValue"
+                size="small"
+                style="width: 120px;"
+                @keyup.enter="handleAddOption('region')"
+                @blur="handleAddOption('region')"
+              />
+              <el-button v-else size="small" @click="showInput('region')">+ 新增区域</el-button>
             </div>
           </el-col>
         </el-row>
@@ -216,11 +241,12 @@ const getList = () => {
 getList();
 
 // ========== 业务选项管理 ==========
-const optionConfigIds = reactive({ biz: null, service: null, version: null });
+const optionConfigIds = reactive({ biz: null, service: null, version: null, region: null });
 
 const bizOptions = ref<string[]>([]);
 const serviceOptions = ref<string[]>([]);
 const versionOptions = ref<string[]>([]);
+const regionOptions = ref<string[]>([]);
 
 const bizInputVisible = ref(false);
 const bizInputValue = ref('');
@@ -234,17 +260,22 @@ const versionInputVisible = ref(false);
 const versionInputValue = ref('');
 const versionInputRef = ref<any>(null);
 
-const optionKeyMap = { biz: 'BIZ_OPTIONS', service: 'SERVICE_OPTIONS', version: 'VERSION_OPTIONS' };
-const optionDescMap = { biz: '产品线选项配置', service: '服务选项配置', version: '版本选项配置' };
+const regionInputVisible = ref(false);
+const regionInputValue = ref('');
+const regionInputRef = ref<any>(null);
+
+const optionKeyMap = { biz: 'BIZ_OPTIONS', service: 'SERVICE_OPTIONS', version: 'VERSION_OPTIONS', region: 'REGION_OPTIONS' };
+const optionDescMap = { biz: '产品线选项配置', service: '服务选项配置', version: '版本选项配置', region: '区域选项配置' };
 
 const loadOptions = async () => {
-  for (const type of ['biz', 'service', 'version'] as const) {
+  for (const type of ['biz', 'service', 'version', 'region'] as const) {
     const res = await getOptions(type);
     const code = res.data.code;
     if (code === 0) {
       if (type === 'biz') bizOptions.value = res.data.data;
       else if (type === 'service') serviceOptions.value = res.data.data;
       else if (type === 'version') versionOptions.value = res.data.data;
+      else if (type === 'region') regionOptions.value = res.data.data;
     }
   }
   // 同时获取对应 config 项的 id，用于后续更新
@@ -254,6 +285,7 @@ const loadOptions = async () => {
       if (item.configKey === 'BIZ_OPTIONS') optionConfigIds.biz = item.id;
       if (item.configKey === 'SERVICE_OPTIONS') optionConfigIds.service = item.id;
       if (item.configKey === 'VERSION_OPTIONS') optionConfigIds.version = item.id;
+      if (item.configKey === 'REGION_OPTIONS') optionConfigIds.region = item.id;
     });
   }
 };
@@ -263,6 +295,7 @@ const showInput = (type: string) => {
   if (type === 'biz') bizInputVisible.value = true;
   else if (type === 'service') serviceInputVisible.value = true;
   else if (type === 'version') versionInputVisible.value = true;
+  else if (type === 'region') regionInputVisible.value = true;
 };
 
 const handleAddOption = async (type: string) => {
@@ -271,6 +304,7 @@ const handleAddOption = async (type: string) => {
   if (type === 'biz') { value = bizInputValue.value; list = bizOptions.value; bizInputVisible.value = false; }
   else if (type === 'service') { value = serviceInputValue.value; list = serviceOptions.value; serviceInputVisible.value = false; }
   else if (type === 'version') { value = versionInputValue.value; list = versionOptions.value; versionInputVisible.value = false; }
+  else if (type === 'region') { value = regionInputValue.value; list = regionOptions.value; regionInputVisible.value = false; }
 
   if (!value || value.trim() === '') return;
   value = value.trim();
@@ -284,6 +318,7 @@ const handleAddOption = async (type: string) => {
   if (type === 'biz') bizInputValue.value = '';
   else if (type === 'service') serviceInputValue.value = '';
   else if (type === 'version') versionInputValue.value = '';
+  else if (type === 'region') regionInputValue.value = '';
 };
 
 const removeOption = async (type: string, item: string, index: number) => {
@@ -291,6 +326,7 @@ const removeOption = async (type: string, item: string, index: number) => {
   if (type === 'biz') list = bizOptions.value;
   else if (type === 'service') list = serviceOptions.value;
   else if (type === 'version') list = versionOptions.value;
+  else if (type === 'region') list = regionOptions.value;
 
   list.splice(index, 1);
   await saveOptionConfig(type, list);
@@ -323,6 +359,7 @@ const saveOptionConfig = async (type: string, list: string[]) => {
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.configKey === '') query.configKey = null;
   getList();
 };
 

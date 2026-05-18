@@ -9,6 +9,21 @@ export const getReportList = (param: any) => {
     });
 }
 
+export const getReportListAll = (param: any) => {
+    return request({
+        url: '/report/list',
+        method: 'get',
+        params: param
+    });
+}
+
+export const getJMeterResultByReport = (reportId: number) => {
+    return request({
+        url: '/report/getJMeterResult/' + reportId,
+        method: 'get'
+    });
+}
+
 export const downloadReport = async (id: number) => {
     try {
         const response: AxiosResponse<Blob> = await request({

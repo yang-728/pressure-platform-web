@@ -89,6 +89,12 @@
                       </el-dropdown-item>
                       <el-dropdown-item
                           class="dropdown-button"
+                          style="background-color: #C8E6C9; color: #1B5E20;"
+                          @click="openScheduleDialog(scope.row)">
+                        定时压测
+                      </el-dropdown-item>
+                      <el-dropdown-item
+                          class="dropdown-button"
                           style="background-color: #FFABAB; color: #C62828;"
                           @click="stopAction(scope.row.id)">
                         停止
@@ -106,12 +112,7 @@
               </el-col>
             </el-row>
             <el-row type="flex" justify="center">
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Refresh" class="bg-blue" @click="openChartDialog(scope.row.id)" v-permiss="1">
-                  曲线
-                </el-button>
-              </el-col>
-              <el-col :span="12">
+              <el-col :span="24">
                 <el-button style="margin-left: 0" text :icon="Delete" class="red" @click="handleDelete(scope.row.id)" v-permiss="1">
                   删除
                 </el-button>
@@ -236,6 +237,16 @@
         <el-form-item label="运行时间">
           <el-input v-model="runForm.duration" placeholder="持续时间 秒数，如 300"></el-input>
         </el-form-item>
+        <el-form-item label="目标区域">
+          <el-select v-model="runForm.region" placeholder="全部区域" @change="onRegionChange" style="width:100%">
+            <el-option key="" label="全部区域" value=""></el-option>
+            <el-option v-for="r in regionList" :key="r" :label="r" :value="r"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="压力机数">
+          <el-input-number v-model="runForm.slaveCount" :min="1" :max="maxSlaveCount" :step="1" :disabled="maxSlaveCount <= 1"></el-input-number>
+          <span style="margin-left:8px;color:#909399;font-size:12px">可用 {{ maxSlaveCount }} 台</span>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -245,10 +256,100 @@
       </template>
     </el-dialog>
 
-    <!-- 曲线图弹出框 -->
-    <el-dialog title="实时数据" v-model="chartDialogVisible" width="60%">
-      <schart class="bar-schart" canvasId="throughputChart" :options="throughputChart"></schart>
-      <schart class="bar-schart" canvasId="responseTimeChart" :options="responseTimeChart"></schart>
+    <!-- 定时压测配置弹出框 -->
+    <el-dialog title="定时压测" v-model="scheduleVisible" width="35%">
+      <el-form label-width="90px">
+        <el-form-item label="执行方式">
+          <el-radio-group v-model="scheduleForm.scheduleType">
+            <el-radio label="once">仅执行一次</el-radio>
+            <el-radio label="daily">每日</el-radio>
+            <el-radio label="weekly">每周</el-radio>
+            <el-radio label="monthly">每月</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="scheduleForm.scheduleType === 'once'" label="执行时间">
+          <el-date-picker
+              v-model="scheduleForm.onceDateTime"
+              type="datetime"
+              placeholder="选择日期时间"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              style="width:100%">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item v-if="scheduleForm.scheduleType === 'daily'" label="执行时间">
+          <el-time-picker
+              v-model="scheduleForm.dailyTime"
+              placeholder="选择时间"
+              format="HH:mm"
+              value-format="HH:mm"
+              style="width:100%">
+          </el-time-picker>
+        </el-form-item>
+        <template v-if="scheduleForm.scheduleType === 'weekly'">
+          <el-form-item label="执行时间">
+            <el-time-picker
+                v-model="scheduleForm.weeklyTime"
+                placeholder="选择时间"
+                format="HH:mm"
+                value-format="HH:mm"
+                style="width:100%">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item label="执行日">
+            <el-checkbox-group v-model="scheduleForm.daysOfWeek">
+              <el-checkbox :label="1">周一</el-checkbox>
+              <el-checkbox :label="2">周二</el-checkbox>
+              <el-checkbox :label="3">周三</el-checkbox>
+              <el-checkbox :label="4">周四</el-checkbox>
+              <el-checkbox :label="5">周五</el-checkbox>
+              <el-checkbox :label="6">周六</el-checkbox>
+              <el-checkbox :label="7">周日</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </template>
+        <template v-if="scheduleForm.scheduleType === 'monthly'">
+          <el-form-item label="执行时间">
+            <el-time-picker
+                v-model="scheduleForm.monthlyTime"
+                placeholder="选择时间"
+                format="HH:mm"
+                value-format="HH:mm"
+                style="width:100%">
+            </el-time-picker>
+          </el-form-item>
+          <el-form-item label="每月日">
+            <el-input-number v-model="scheduleForm.dayOfMonth" :min="1" :max="28" :step="1" step-strictly></el-input-number>
+            <span style="margin-left:8px;color:#909399;font-size:12px">建议1-28日以确保每月都可执行</span>
+          </el-form-item>
+        </template>
+        <el-divider content-position="left">压测参数</el-divider>
+        <el-form-item label="并发数">
+          <el-input v-model="scheduleForm.runParam.numThreads" placeholder="并发线程数，如 100"></el-input>
+        </el-form-item>
+        <el-form-item label="启动时间">
+          <el-input v-model="scheduleForm.runParam.rampTime" placeholder="Ramp-Up 秒数，如 10"></el-input>
+        </el-form-item>
+        <el-form-item label="运行时间">
+          <el-input v-model="scheduleForm.runParam.duration" placeholder="持续时间 秒数，如 300"></el-input>
+        </el-form-item>
+        <el-form-item label="目标区域">
+          <el-select v-model="scheduleForm.runParam.region" placeholder="全部区域" @change="onScheduleRegionChange" style="width:100%">
+            <el-option key="" label="全部区域" value=""></el-option>
+            <el-option v-for="r in regionList" :key="r" :label="r" :value="r"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="压力机数">
+          <el-input-number v-model="scheduleForm.runParam.slaveCount" :min="1" :max="maxSlaveCount" :step="1" :disabled="maxSlaveCount <= 1"></el-input-number>
+          <span style="margin-left:8px;color:#909399;font-size:12px">可用 {{ maxSlaveCount }} 台</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="scheduleVisible = false">取 消</el-button>
+          <el-button type="primary" @click="confirmSchedule">确 定</el-button>
+        </span>
+      </template>
     </el-dialog>
 
 <!--    抽屉展示用例详情-->
@@ -1095,23 +1196,24 @@
 </template>
 
 <script setup lang="ts" name="baseTestCase">
-import Schart from 'vue-schart';
-import {ref, reactive, onUnmounted, onMounted, watch, computed} from 'vue';
+import {ref, reactive, onUnmounted, onMounted, computed, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import { Plus, Search, Delete, Edit, Refresh, Right, Upload } from '@element-plus/icons-vue';
 import {
   addTestCase, debugTestCase,
-  deleteTestCase, getFull, getResult,
+  deleteTestCase, getFull,
   getTestCaseList,
   startTestCase,
   stopTestCase,
   updateTestCase
 } from "../api/testcase";
 import {getOptions} from "../api/config";
+import { addScheduledTask } from "../api/scheduledTask";
 import {CsvItem, JarItem, JmxItem} from "../common/item";
 import {deleteCsv, viewCsv, uploadCsv, downloadCsv} from "../api/csv";
 import {addOnlineJmx, deleteJmx, viewJmx, getOnlineJmx, updateOnlineJmx, uploadJmx, downloadJmx} from "../api/jmx";
 import {deleteJar, downloadJar, uploadJar} from "../api/jar";
+import {getEnableSlaveCount, getRegions} from "../api/node";
 import router from "../router";
 import {checkToLogin} from "../common/push";
 import {useRoute} from "vue-router";
@@ -1246,6 +1348,10 @@ onUnmounted(() => {
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.id === '') query.id = null;
+  if (query.name === '') query.name = null;
+  if (query.biz === '') query.biz = null;
+  if (query.service === '') query.service = null;
   getList();
 };
 
@@ -1316,6 +1422,91 @@ const handleDelete = async (id: number) => {
   }
 };
 
+// 定时压测配置弹窗
+const scheduleVisible = ref(false);
+const scheduleForm = reactive({
+  id: null as number | null,
+  testCaseId: null as number | null,
+  scheduleType: 'once' as string,
+  onceDateTime: '' as string,
+  dailyTime: '' as string,
+  weeklyTime: '' as string,
+  daysOfWeek: [] as number[],
+  monthlyTime: '' as string,
+  dayOfMonth: 1 as number,
+  runParam: {
+    numThreads: '10',
+    rampTime: '0',
+    duration: '60',
+    slaveCount: 1,
+    region: ''
+  }
+});
+
+const openScheduleDialog = async (row: any) => {
+  scheduleForm.id = null;
+  scheduleForm.testCaseId = row.id;
+  scheduleForm.scheduleType = 'once';
+  scheduleForm.onceDateTime = '';
+  scheduleForm.dailyTime = '';
+  scheduleForm.weeklyTime = '';
+  scheduleForm.daysOfWeek = [];
+  scheduleForm.monthlyTime = '';
+  scheduleForm.dayOfMonth = 1;
+  scheduleForm.runParam.numThreads = row.numThreads || '10';
+  scheduleForm.runParam.rampTime = row.rampTime || '0';
+  scheduleForm.runParam.duration = row.duration || '60';
+  scheduleForm.runParam.slaveCount = 1;
+  scheduleForm.runParam.region = '';
+  try {
+    const [regionRes, countRes] = await Promise.all([
+      getRegions(),
+      getEnableSlaveCount()
+    ]);
+    if (regionRes.data.code === 0) regionList.value = regionRes.data.data;
+    if (countRes.data.code === 0) maxSlaveCount.value = Math.max(1, countRes.data.data);
+  } catch { /* ignore */ }
+  scheduleVisible.value = true;
+};
+
+const confirmSchedule = async () => {
+  let scheduleData: any = {};
+  if (scheduleForm.scheduleType === 'once') {
+    if (!scheduleForm.onceDateTime) { ElMessage.error('请选择执行时间'); return; }
+    scheduleData = { time: scheduleForm.onceDateTime };
+  } else if (scheduleForm.scheduleType === 'daily') {
+    if (!scheduleForm.dailyTime) { ElMessage.error('请选择执行时间'); return; }
+    scheduleData = { time: scheduleForm.dailyTime };
+  } else if (scheduleForm.scheduleType === 'weekly') {
+    if (!scheduleForm.weeklyTime) { ElMessage.error('请选择执行时间'); return; }
+    if (scheduleForm.daysOfWeek.length === 0) { ElMessage.error('请选择执行日'); return; }
+    scheduleData = { time: scheduleForm.weeklyTime, daysOfWeek: scheduleForm.daysOfWeek };
+  } else if (scheduleForm.scheduleType === 'monthly') {
+    if (!scheduleForm.monthlyTime) { ElMessage.error('请选择执行时间'); return; }
+    scheduleData = { time: scheduleForm.monthlyTime, dayOfMonth: scheduleForm.dayOfMonth };
+  }
+  const body = {
+    testCaseId: scheduleForm.testCaseId,
+    scheduleType: scheduleForm.scheduleType,
+    scheduleData,
+    runParam: {
+      numThreads: scheduleForm.runParam.numThreads,
+      rampTime: scheduleForm.runParam.rampTime,
+      duration: scheduleForm.runParam.duration,
+      slaveCount: scheduleForm.runParam.slaveCount,
+      region: scheduleForm.runParam.region
+    }
+  };
+  const res = await addScheduledTask(body);
+  if (res.data.code !== 0) {
+    ElMessage.error(res.data.message);
+  } else {
+    ElMessage.success('定时任务创建成功');
+    scheduleVisible.value = false;
+    await getList();
+  }
+};
+
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
 let editForm = reactive({
@@ -1369,18 +1560,57 @@ const debugAction = async (id: number) => {
 
 // 压测配置弹窗
 const runVisible = ref(false);
+const maxSlaveCount = ref(1);
+const regionList = ref<string[]>([]);
 const runForm = reactive({
   id: null,
   numThreads: '10',
   rampTime: '0',
-  duration: '60'
+  duration: '60',
+  slaveCount: 1,
+  region: ''
 });
 
-const openRunDialog = (row: any) => {
+const fetchSlaveCount = async () => {
+  try {
+    const res = await getEnableSlaveCount(runForm.region || undefined);
+    if (res.data.code === 0) {
+      maxSlaveCount.value = Math.max(1, res.data.data);
+    }
+  } catch { /* ignore */ }
+};
+
+const onRegionChange = () => {
+  runForm.slaveCount = 1;
+  fetchSlaveCount();
+};
+
+const onScheduleRegionChange = async () => {
+  scheduleForm.runParam.slaveCount = 1;
+  try {
+    const res = await getEnableSlaveCount(scheduleForm.runParam.region || undefined);
+    if (res.data.code === 0) {
+      maxSlaveCount.value = Math.max(1, res.data.data);
+    }
+  } catch { /* ignore */ }
+};
+
+const openRunDialog = async (row: any) => {
   runForm.id = row.id;
   runForm.numThreads = row.numThreads || '10';
   runForm.rampTime = row.rampTime || '0';
   runForm.duration = row.duration || '60';
+  runForm.slaveCount = 1;
+  runForm.region = '';
+  // 获取区域列表和 slave 数量
+  try {
+    const [regionRes, countRes] = await Promise.all([
+      getRegions(),
+      getEnableSlaveCount()
+    ]);
+    if (regionRes.data.code === 0) regionList.value = regionRes.data.data;
+    if (countRes.data.code === 0) maxSlaveCount.value = Math.max(1, countRes.data.data);
+  } catch { /* ignore */ }
   runVisible.value = true;
 };
 
@@ -1388,7 +1618,9 @@ const confirmRun = async () => {
   const res = await startTestCase(runForm.id, {
     numThreads: runForm.numThreads,
     rampTime: runForm.rampTime,
-    duration: runForm.duration
+    duration: runForm.duration,
+    slaveCount: runForm.slaveCount,
+    region: runForm.region
   });
   const code = res.data.code;
   if (code != 0) {
@@ -2609,77 +2841,6 @@ const handleCheckboxChange = (field: string, value: boolean) => {
 };
 
 
-const chartDialogVisible = ref(false);
-
-// 打开弹窗并获取数据
-const openChartDialog = async (id: number) => {
-  chartDialogVisible.value = true;
-
-  const res = await getResult(id); // 获取后端数据
-  const code = res.data.code
-  if (code != 0) {
-    ElMessage.error(res.data.message);
-    return false;
-  }
-  // console.log("res:", res.data.data);
-
-  // 提取 currentTime、throughput 和 avgResponseTime 列表
-  const resultData = res.data.data;
-  console.log("resultData:", resultData);
-  if (resultData.length == 0) {
-    throughputChart.datasets[0].data = ["0"];
-
-    responseTimeChart.datasets[0].data = ["0"];
-    return;
-  }
-  const labels = resultData.map(item => item.currentTime);
-  const throughputData = resultData.map(item => item.throughput);
-  const responseTimeData = resultData.map(item => item.avgResponseTime);
-
-  // console.log("labels:", labels);
-  // console.log("throughputData:", throughputData);
-  // console.log("responseTimeData:", responseTimeData);
-  // 设置图表数据
-  throughputChart.labels = labels;
-  throughputChart.datasets[0].data = throughputData;
-
-  responseTimeChart.labels = labels;
-  responseTimeChart.datasets[0].data = responseTimeData;
-};
-
-// 绘制吞吐量曲线图
-
-const throughputChart = reactive({
-  type: 'line',
-  title: {
-    text: '吞吐量'
-  },
-  bgColor: '#ffffff',
-  labels: [],
-  xRorate: 45,
-  datasets: [
-    {
-      label: '单位：/s',
-      data: []
-    }
-  ]
-});
-
-const responseTimeChart = reactive({
-  type: 'line',
-  title: {
-    text: '响应时间'
-  },
-  bgColor: '#ffffff',
-  labels: [],
-  xRorate: 45,
-  datasets: [
-    {
-      label: '单位：ms',
-      data: []
-    }
-  ]
-});
 
 </script>
 

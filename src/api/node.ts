@@ -44,3 +44,18 @@ export const disableNode = (id: number) => {
         method: 'get'
     });
 }
+
+export const getEnableSlaveCount = (region?: string) => {
+    return request({
+        url: '/node/enableSlaveCount',
+        method: 'get',
+        params: region ? { region } : {}
+    });
+}
+
+export const getRegions = () => {
+    return request({
+        url: '/node/regions',
+        method: 'get'
+    });
+}

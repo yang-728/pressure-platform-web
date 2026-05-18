@@ -120,6 +120,8 @@ getList();
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.realName === '') query.realName = null;
+  if (query.username === '') query.username = null;
   getList();
 };
 

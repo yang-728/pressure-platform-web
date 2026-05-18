@@ -58,10 +58,19 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/jar.vue'),
             },
             {
+                path: '/execution',
+                name: 'Execution',
+                meta: {
+                    title: '执行队列',
+                    permiss: '1',
+                },
+                component: () => import('../views/execution.vue'),
+            },
+            {
                 path: '/report',
                 name: 'Report',
                 meta: {
-                    title: '报告管理',
+                    title: '执行结果',
                     permiss: '1',
                 },
                 component: () => import('../views/report.vue'),

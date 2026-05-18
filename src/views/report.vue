@@ -51,7 +51,7 @@
 
         <el-table-column label="操作" width="200" align="center">
           <template #default="scope">
-            <el-row type="flex" justify="center">
+            <el-row v-if="scope.row.execType !== 1" type="flex" justify="center">
               <el-col :span="12">
                 <el-button style="margin-left: 0" text :icon="Top" class="bg-blue" @click="handleViewReport(scope.row.id)" v-permiss="1">
                   预览
@@ -162,6 +162,8 @@ getList();
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.testCaseId === '') query.testCaseId = null;
+  if (query.name === '') query.name = null;
   getList();
 };
 
@@ -288,37 +290,28 @@ const handleJMeterLog = async (id: number) => {
 
 /* 调试类型样式 */
 .exec-type-debug {
-  background-color: #B3E5FC; /* 浅蓝色背景 */
-  color: #0277BD; /* 深蓝色文字 */
-  //padding: 4px 8px; /* 内边距 */
-  //border-radius: 4px; /* 圆角 */
-  //display: flex; /* 使用 flexbox */
-  align-items: center; /* 垂直居中 */
-  //font-weight: 500; /* 字体加粗 */
+  background-color: #B3E5FC;
+  color: #0277BD;
+  align-items: center;
 }
 
 /* 压测类型样式 */
 .exec-type-load {
-  background-color: #FFE0B2; /* 浅橙色背景 */
-  color: #EF6C00; /* 深橙色文字 */
-  //padding: 4px 8px; /* 内边距 */
-  //border-radius: 4px; /* 圆角 */
-  //display: flex; /* 使用 flexbox */
-  align-items: center; /* 垂直居中 */
-  //font-weight: 500; /* 字体加粗 */
+  background-color: #FFE0B2;
+  color: #EF6C00;
+  align-items: center;
 }
 
 /* 日志内容样式 */
 .log-content {
-  //max-height: 500px; /* 设置最大高度 */
-  overflow-y: auto; /* 允许垂直滚动 */
-  background-color: #1e1e1e; /* 日志背景色 */
-  color: #dcdcdc; /* 字体颜色 */
-  padding: 15px; /* 内边距 */
-  font-family: "Courier New", Courier, monospace; /* 等宽字体 */
-  font-size: 14px; /* 字体大小 */
-  border-radius: 4px; /* 边角圆滑 */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* 内部阴影 */
+  overflow-y: auto;
+  background-color: #1e1e1e;
+  color: #dcdcdc;
+  padding: 15px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 /* 优化滚动条样式 */

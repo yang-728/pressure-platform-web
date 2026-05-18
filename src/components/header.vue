@@ -10,10 +10,10 @@
 
     <div class="header-right">
 			<div class="header-user-con">
-        <a class="custom-link" href="https://lihuia.com" target="_blank">
+        <!-- <a class="custom-link" href="https://lihuia.com" target="_blank">
           <i class="el-icon-lx-message"></i>
-        </a>
-        <a class="custom-link" href="https://github.com/100ZZ/mysterious" target="_blank">
+        </a> -->
+        <a class="custom-link" href="https://github.com/yang-728/pressure-platform" target="_blank">
           <i class="el-icon-lx-likefill"></i>
         </a>
         <a class="custom-link">

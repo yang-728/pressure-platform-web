@@ -16,7 +16,6 @@
         <el-table-column prop="description" label="描述" align="center"></el-table-column>
         <el-table-column prop="type" label="类型" :formatter="nodeTypeFormat" align="center"></el-table-column>
         <el-table-column prop="host" label="地址" align="center"></el-table-column>
-        <el-table-column prop="port" label="端口" align="center"></el-table-column>
         <el-table-column prop="username" label="用户" align="center"></el-table-column>
         <el-table-column prop="password" label="密码" align="center"></el-table-column>
         <el-table-column prop="status" label="状态" align="center">
@@ -30,6 +29,7 @@
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
         <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>
         <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>
+        <el-table-column prop="region" label="区域" align="center"></el-table-column>
 
         <el-table-column label="操作" width="200" align="center">
           <template #default="scope">
@@ -107,6 +107,11 @@
         <el-form-item label="登录密码">
           <el-input v-model="insertForm.password" placeholder="登录密码"></el-input>
         </el-form-item>
+        <el-form-item label="所属区域">
+          <el-select v-model="insertForm.region" multiple filterable allow-create placeholder="选择区域">
+            <el-option v-for="r in regionOptions" :key="r" :label="r" :value="r"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
 				<span class="dialog-footer">
@@ -143,6 +148,11 @@
         <el-form-item label="登录用户">
           <el-input v-model="editForm.username" placeholder="ssh用户"></el-input>
         </el-form-item>
+        <el-form-item label="所属区域">
+          <el-select v-model="editForm.region" multiple filterable allow-create placeholder="选择区域">
+            <el-option v-for="r in regionOptions" :key="r" :label="r" :value="r"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
 				<span class="dialog-footer">
@@ -155,10 +165,11 @@
 </template>
 
 <script setup lang="ts" name="baseNode">
-import {ref, reactive, computed} from 'vue';
+import {ref, reactive, computed, onMounted} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import { Plus, Search, Delete, Edit, Refresh, Right } from '@element-plus/icons-vue';
 import {addNode, deleteNode, disableNode, enableNode, getNodeList, updateNode} from "../api/node";
+import {getOptions} from "../api/config";
 import {codeToNodeStatus, codeToNodeType, nodeTypeToCode} from "../common/convert";
 import {syncNode} from "../api/testcase";
 import {checkToLogin} from "../common/push";
@@ -172,6 +183,7 @@ interface NodeItem {
   port: number;
   username: string;
   password: string;
+  region: string;
   creator: string;
   modifier: string;
   createTime: string;
@@ -208,6 +220,8 @@ getList();
 // 查询操作
 const handleSearch = () => {
   query.page = 1;
+  if (query.name === '') query.name = null;
+  if (query.host === '') query.host = null;
   getList();
 };
 
@@ -225,6 +239,14 @@ const handlePageChange = (val: number) => {
 
 // 表格新增时弹窗和保存
 const insertVisible = ref(false);
+const regionOptions = ref<string[]>([]);
+onMounted(async () => {
+  try {
+    const res = await getOptions('region');
+    if (res.data.code === 0) regionOptions.value = res.data.data;
+  } catch { /* ignore */ }
+});
+
 let insertForm = reactive({
   name: null,
   description: null,
@@ -232,7 +254,8 @@ let insertForm = reactive({
   host: null,
   port: null,
   username: null,
-  password: null
+  password: null,
+  region: [] as string[]
 });
 
 const handleInsert = (row: any) => {
@@ -243,11 +266,13 @@ const handleInsert = (row: any) => {
   insertForm.port = row.port;
   insertForm.username = row.username;
   insertForm.password = row.password;
+  insertForm.region = [];
   insertVisible.value = true;
 };
 
 const saveInsert = async () => {
-  const res = await addNode(insertForm);
+  const body = { ...insertForm, region: insertForm.region.join(',') };
+  const res = await addNode(body);
 
   const code = res.data.code;
   if (code !== 0) {
@@ -284,7 +309,8 @@ let editForm = reactive({
   type: null,
   host: null,
   port: null,
-  username: null
+  username: null,
+  region: [] as string[]
 });
 
 const handleEdit = (row : any) => {
@@ -295,12 +321,14 @@ const handleEdit = (row : any) => {
   editForm.host = row.host;
   editForm.port = row.port;
   editForm.username = row.username;
+  editForm.region = (row.region || '').split(',').filter((s: string) => s.trim());
   editVisible.value = true;
 };
 
 const saveEdit = async () => {
   editForm.type = nodeTypeToCode(editForm.type);
-  const res = await updateNode(editForm.id, editForm);
+  const body = { ...editForm, region: editForm.region.join(',') };
+  const res = await updateNode(editForm.id, body);
 
   const code = res.data.code
   if (code != 0) {
