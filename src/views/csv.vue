@@ -9,7 +9,7 @@
         <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
       </div>
 
-      <el-table :data="csvData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="csvData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="srcName" label="名称" align="center">
           <template #default="scope">
@@ -24,19 +24,16 @@
         </el-table-column>
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
-<!--        <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>-->
-<!--        <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>-->
 
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="140" align="right">
           <template #default="scope">
-            <el-button text :icon="Search" class="bg-blue" @click="drawer = true,handleCsvView(scope.row.id)" v-permiss="1">
-              预览
-            </el-button>
-            <el-button text :icon="Delete" class="red" @click="handleCsvDelete(scope.row.id)" v-permiss="1">
-              删除
-            </el-button>
+            <div class="action-group">
+              <el-button text :icon="Search" type="primary" @click="drawer = true,handleCsvView(scope.row.id)" v-permiss="1">预览</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleCsvDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无数据文件" /></template>
       </el-table>
 
 <!--      &lt;!&ndash;    抽屉展示详情&ndash;&gt;-->
@@ -89,9 +86,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const csvData = ref<CsvItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getCsvList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -101,7 +100,7 @@ const getList = () => {
     }
     csvData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -161,68 +160,4 @@ const handleCsvView = async (id: number) => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
-
-
-/* 日志内容样式 */
-.log-content {
-//max-height: 500px; /* 设置最大高度 */
-  overflow-y: auto; /* 允许垂直滚动 */
-  background-color: #1e1e1e; /* 日志背景色 */
-  color: #dcdcdc; /* 字体颜色 */
-  padding: 15px; /* 内边距 */
-  font-family: "Courier New", Courier, monospace; /* 等宽字体 */
-  font-size: 14px; /* 字体大小 */
-  border-radius: 4px; /* 边角圆滑 */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* 内部阴影 */
-}
-
-/* 优化滚动条样式 */
-.log-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.log-content::-webkit-scrollbar-thumb {
-  background-color: #888; /* 滚动条颜色 */
-  border-radius: 4px; /* 滚动条圆角 */
-}
-
-.log-content::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* 滚动条悬停颜色 */
-}
 </style>

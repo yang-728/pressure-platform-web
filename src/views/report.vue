@@ -10,29 +10,19 @@
         <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
       </div>
 
-      <el-table :data="reportData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="reportData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="name" label="名称" align="center"></el-table-column>
         <el-table-column prop="description" label="描述" align="center"></el-table-column>
         <el-table-column prop="testCaseId" label="用例" align="center">
           <template #default="scope">
-            <span @click="handleTestCaseClick(scope.row.testCaseId)" style="cursor: pointer; color: blue;">{{ scope.row.testCaseId }}</span>
+            <span @click="handleTestCaseClick(scope.row.testCaseId)" style="cursor: pointer; color: var(--color-primary);">{{ scope.row.testCaseId }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="execType" label="类型" align="center">
           <template #default="scope">
-<!--            <el-tag v-if="scope.row.execType === 1" type="primary">调试</el-tag>-->
-<!--            <el-tag v-if="scope.row.execType === 2" type="danger">压测</el-tag>-->
-            <el-tag
-                v-if="scope.row.execType === 1"
-                class="exec-type-debug"
-            >调试
-            </el-tag>
-            <el-tag
-                v-if="scope.row.execType === 2"
-                class="exec-type-load"
-            >压测
-            </el-tag>
+            <el-tag v-if="scope.row.execType === 1" class="exec-type-debug">调试</el-tag>
+            <el-tag v-if="scope.row.execType === 2" class="exec-type-load">压测</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" align="center">
@@ -46,37 +36,20 @@
         <el-table-column prop="responseData" label="结果" align="center"></el-table-column>
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
-<!--        <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>-->
-<!--        <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>-->
 
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="200" align="right">
           <template #default="scope">
-            <el-row v-if="scope.row.execType !== 1" type="flex" justify="center">
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Top" class="bg-blue" @click="handleViewReport(scope.row.id)" v-permiss="1">
-                  预览
-                </el-button>
-              </el-col>
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Download" class="bg-blue" @click="handleDownload(scope.row.id)" v-permiss="1">
-                  下载
-                </el-button>
-              </el-col>
-            </el-row>
-            <el-row type="flex" justify="center">
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Search" class="bg-blue" @click="drawer = true,handleJMeterLog(scope.row.id)" v-permiss="1">
-                  日志
-                </el-button>
-              </el-col>
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Delete" class="red" @click="handleDelete(scope.row.id)" v-permiss="1">
-                  删除
-                </el-button>
-              </el-col>
-            </el-row>
+            <div v-if="scope.row.execType !== 1" class="action-group">
+              <el-button text :icon="Top" type="primary" @click="handleViewReport(scope.row.id)" v-permiss="1">预览</el-button>
+              <el-button text :icon="Download" type="primary" @click="handleDownload(scope.row.id)" v-permiss="1">下载</el-button>
+            </div>
+            <div class="action-group">
+              <el-button text :icon="Search" type="primary" @click="drawer = true,handleJMeterLog(scope.row.id)" v-permiss="1">日志</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无执行报告" /></template>
       </el-table>
 
       <div class="pagination">
@@ -143,9 +116,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const reportData = ref<ReportItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getReportList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -155,7 +130,7 @@ const getList = () => {
     }
     reportData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -224,107 +199,4 @@ const handleJMeterLog = async (id: number) => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.purple {
-  color: #7b68ee;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
-
-.status-not-executed {
-  background-color: #909399 !important;
-  color: #FFFFFF !important;
-  border-color: #909399 !important;
-}
-
-.status-executing {
-  background-color: #E6A23C !important;
-  color: #FFFFFF !important;
-  border-color: #E6A23C !important;
-}
-
-.status-success {
-  background-color: #67C23A !important;
-  color: #FFFFFF !important;
-  border-color: #67C23A !important;
-}
-
-.status-error {
-  background-color: #F56C6C !important;
-  color: #FFFFFF !important;
-  border-color: #F56C6C !important;
-}
-
-/* 调试类型样式 */
-.exec-type-debug {
-  background-color: #B3E5FC;
-  color: #0277BD;
-  align-items: center;
-}
-
-/* 压测类型样式 */
-.exec-type-load {
-  background-color: #FFE0B2;
-  color: #EF6C00;
-  align-items: center;
-}
-
-/* 日志内容样式 */
-.log-content {
-  overflow-y: auto;
-  background-color: #1e1e1e;
-  color: #dcdcdc;
-  padding: 15px;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 14px;
-  border-radius: 4px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* 优化滚动条样式 */
-.log-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.log-content::-webkit-scrollbar-thumb {
-  background-color: #888; /* 滚动条颜色 */
-  border-radius: 4px; /* 滚动条圆角 */
-}
-
-.log-content::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* 滚动条悬停颜色 */
-}
 </style>

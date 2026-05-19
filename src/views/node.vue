@@ -10,7 +10,7 @@
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
-      <el-table :data="nodeData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="nodeData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="name" label="名称" align="center"></el-table-column>
         <el-table-column prop="description" label="描述" align="center"></el-table-column>
@@ -31,40 +31,27 @@
         <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>
         <el-table-column prop="region" label="区域" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="200" align="right">
           <template #default="scope">
-            <el-row type="flex" justify="center">
-              <el-col :span="12">
-                <el-dropdown class="group-status" trigger="click">
-                  <el-button text :icon="Right" class="bg-blue" v-permiss="1">操作</el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu class="horizontal-dropdown-menu">
-                      <el-dropdown-item :style="{ backgroundColor: '#D1E7DD', color: '#4CAF50' }" @click="enableAction(scope.row.id)">启用</el-dropdown-item>
-                      <el-dropdown-item :style="{ backgroundColor: '#FFCDD2', color: '#EF5350' }" @click="disableAction(scope.row.id)">禁用</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </el-col>
-              <el-col :span="12">
-                <el-button text :icon="Refresh" class="bg-blue" @click="syncAction(scope.row.id)" v-permiss="1">
-                  同步
-                </el-button>
-              </el-col>
-            </el-row>
-            <el-row type="flex" justify="center">
-              <el-col :span="12">
-                <el-button text :icon="Edit" class="bg-blue" @click="handleEdit(scope.row)" v-permiss="1">
-                  编辑
-                </el-button>
-              </el-col>
-              <el-col :span="12">
-                <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row.id)" v-permiss="1">
-                  删除
-                </el-button>
-              </el-col>
-            </el-row>
+            <div class="action-group">
+              <el-dropdown trigger="click">
+                <el-button text :icon="Right" type="primary" v-permiss="1">操作</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item style="background-color:#D1E7DD;color:#4CAF50" @click="enableAction(scope.row.id)">启用</el-dropdown-item>
+                    <el-dropdown-item style="background-color:#FFCDD2;color:#EF5350" @click="disableAction(scope.row.id)">禁用</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-button text :icon="Refresh" type="primary" @click="syncAction(scope.row.id)" v-permiss="1">同步</el-button>
+            </div>
+            <div class="action-group">
+              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无节点数据" /></template>
       </el-table>
 
       <div class="pagination">
@@ -201,9 +188,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const nodeData = ref<NodeItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getNodeList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -213,7 +202,7 @@ const getList = () => {
     }
     nodeData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -424,73 +413,4 @@ function sleep(ms: number): Promise<void> {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.orange {
-  color: #ffA500;
-}
-.purple {
-  color: #7b68ee;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
-.horizontal-dropdown-menu {
-  display: flex; /* 使用 flexbox */
-  flex-direction: row; /* 横向排列 */
-  padding: 0; /* 去掉内边距（如果需要） */
-}
-
-.horizontal-dropdown-menu .el-dropdown-item {
-  padding: 10px 20px; /* 可以根据需要调整每个按钮的内边距 */
-}
-
-.disabled {
-  background-color: #909399 !important;
-  color: #FFFFFF !important;
-  border-color: #909399 !important;
-}
-
-.enabled {
-  background-color: #67C23A !important;
-  color: #FFFFFF !important;
-  border-color: #67C23A !important;
-}
-
-.failed {
-  background-color: #F56C6C !important;
-  color: #FFFFFF !important;
-  border-color: #F56C6C !important;
-}
 </style>

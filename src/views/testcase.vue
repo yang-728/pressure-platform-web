@@ -11,10 +11,10 @@
             @input="v => query.id = v.replace(/[^\d]/g, '')"
         ></el-input>
         <el-input v-model="query.name" placeholder="名称" class="handle-input mr10"></el-input>
-        <el-select v-model="query.biz" placeholder="产品线" class="handle-input mr10" clearable filterable>
+        <el-select v-model="query.biz" placeholder="产品线" class="handle-select mr10" clearable filterable>
           <el-option v-for="item in bizOptions" :key="item" :label="item" :value="item"></el-option>
         </el-select>
-        <el-select v-model="query.service" placeholder="服务" class="handle-input mr10" clearable filterable>
+        <el-select v-model="query.service" placeholder="服务" class="handle-select mr10" clearable filterable>
           <el-option v-for="item in serviceOptions" :key="item" :label="item" :value="item"></el-option>
         </el-select>
 
@@ -23,7 +23,7 @@
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
-      <el-table :data="testCaseData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="testCaseData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="name" label="名称" align="center"></el-table-column>
         <el-table-column prop="description" label="描述" align="center"></el-table-column>
@@ -45,83 +45,33 @@
         <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>
         <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="200" align="right">
           <template #default="scope">
-            <el-row type="flex" justify="center">
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Search" class="bg-blue" @click="drawer = true, getFullTestCase(scope.row.id)" v-permiss="1">
-                  详情
-                </el-button>
-              </el-col>
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Edit" class="bg-blue" @click="handleEdit(scope.row)" v-permiss="1">
-                  编辑
-                </el-button>
-              </el-col>
-            </el-row>
-            <el-row type="flex" justify="center">
-              <el-col :span="12">
-<!--                <el-dropdown class="group-status" trigger="click">-->
-<!--                  <el-button style="margin-left: 0" text :icon="Right" class="bg-blue" v-permiss="1">执行</el-button>-->
-<!--                  <template #dropdown>-->
-<!--                    <el-button-group>-->
-<!--                      <el-button type="primary" @click="debugAction(scope.row.id)">调试</el-button>-->
-<!--                      <el-button type="danger" @click="startAction(scope.row.id)">压测</el-button>-->
-<!--                      <el-button type="info" @click="stopAction(scope.row.id)">停止</el-button>-->
-<!--                    </el-button-group>-->
-<!--                  </template>-->
-<!--                </el-dropdown>-->
-                <el-dropdown class="group-status" trigger="click">
-                  <el-button style="margin-left: 0" text :icon="Right" class="bg-blue" v-permiss="1">执行</el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu class="horizontal-dropdown-menu">
-                      <el-dropdown-item
-                          class="dropdown-button"
-                          style="background-color: #BBDEFB; color: #0D47A1;"
-                          @click="debugAction(scope.row.id)">
-                        调试
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                          class="dropdown-button"
-                          style="background-color: #FFE0B2; color: #E65100;"
-                          @click="openRunDialog(scope.row)">
-                        压测
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                          class="dropdown-button"
-                          style="background-color: #C8E6C9; color: #1B5E20;"
-                          @click="openScheduleDialog(scope.row)">
-                        定时压测
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                          class="dropdown-button"
-                          style="background-color: #FFABAB; color: #C62828;"
-                          @click="stopAction(scope.row.id)">
-                        停止
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-
-                  </template>
-                </el-dropdown>
-
-              </el-col>
-              <el-col :span="12">
-                <el-button style="margin-left: 0" text :icon="Plus" class="bg-blue" @click="goReports(scope.row.id, scope.row.name)" v-permiss="1">
-                  报告
-                </el-button>
-              </el-col>
-            </el-row>
-            <el-row type="flex" justify="center">
-              <el-col :span="24">
-                <el-button style="margin-left: 0" text :icon="Delete" class="red" @click="handleDelete(scope.row.id)" v-permiss="1">
-                  删除
-                </el-button>
-              </el-col>
-            </el-row>
+            <div class="action-group">
+              <el-button text :icon="Search" type="primary" @click="drawer = true, getFullTestCase(scope.row.id)" v-permiss="1">详情</el-button>
+              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
+            </div>
+            <div class="action-group">
+              <el-dropdown trigger="click">
+                <el-button text :icon="Right" type="primary" v-permiss="1">执行</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu class="horizontal-dropdown-menu">
+                    <el-dropdown-item class="dropdown-button" style="background-color:#BBDEFB;color:#0D47A1" @click="debugAction(scope.row.id)">调试</el-dropdown-item>
+                    <el-dropdown-item class="dropdown-button" style="background-color:#FFE0B2;color:#E65100" @click="openRunDialog(scope.row)">压测</el-dropdown-item>
+                    <el-dropdown-item class="dropdown-button" style="background-color:#C8E6C9;color:#1B5E20" @click="openScheduleDialog(scope.row)">定时压测</el-dropdown-item>
+                    <el-dropdown-item class="dropdown-button" style="background-color:#FFABAB;color:#C62828" @click="stopAction(scope.row.id)">停止</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-button text :icon="Plus" type="primary" @click="goReports(scope.row.id, scope.row.name)" v-permiss="1">报告</el-button>
+            </div>
+            <div class="action-group">
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
 
-
+        <template #empty><el-empty description="暂无用例数据" /></template>
       </el-table>
 
       <div class="pagination">
@@ -737,7 +687,7 @@
                       </el-table-column>
                       <el-table-column label="操作" width="120" align="center">
                         <template #default="scope">
-                          <el-button text :icon="Delete" class="red" @click="handleHttpHeaderDelete(scope.$index)">
+                          <el-button text :icon="Delete" type="danger" @click="handleHttpHeaderDelete(scope.$index)">
                             删除
                           </el-button>
                         </template>
@@ -765,7 +715,7 @@
                       </el-table-column>
                       <el-table-column label="操作" width="120" align="center">
                         <template #default="scope">
-                          <el-button text :icon="Delete" class="red" @click="handleHttpParamDelete(scope.$index)">
+                          <el-button text :icon="Delete" type="danger" @click="handleHttpParamDelete(scope.$index)">
                             删除
                           </el-button>
                         </template>
@@ -804,7 +754,7 @@
                       </el-table-column>
                       <el-table-column label="操作" width="120" align="center">
                         <template #default="scope">
-                          <el-button text :icon="Delete" class="red" @click="handleJavaParamDelete(scope.$index)">
+                          <el-button text :icon="Delete" type="danger" @click="handleJavaParamDelete(scope.$index)">
                             删除
                           </el-button>
                         </template>
@@ -1008,7 +958,7 @@
                       </el-table-column>
                       <el-table-column label="操作" width="120" align="center">
                         <template #default="scope">
-                          <el-button text :icon="Delete" class="red" @click="handleDubboMethodArgsDelete(scope.$index)">
+                          <el-button text :icon="Delete" type="danger" @click="handleDubboMethodArgsDelete(scope.$index)">
                             删除
                           </el-button>
                         </template>
@@ -1030,7 +980,7 @@
                       </el-table-column>
                       <el-table-column label="操作" width="120" align="center">
                         <template #default="scope">
-                          <el-button text :icon="Delete" class="red" @click="handleDubboAttachmentArgsDelete(scope.$index)">
+                          <el-button text :icon="Delete" type="danger" @click="handleDubboAttachmentArgsDelete(scope.$index)">
                             删除
                           </el-button>
                         </template>
@@ -1151,7 +1101,7 @@
                 </el-table-column>
                 <el-table-column label="操作" width="120" align="center">
                   <template #default="scope">
-                    <el-button text :icon="Delete" class="red" @click="handleCsvFileDelete(scope.$index)">
+                    <el-button text :icon="Delete" type="danger" @click="handleCsvFileDelete(scope.$index)">
                       删除
                     </el-button>
                   </template>
@@ -1319,9 +1269,11 @@ const isBodyDisabled = computed(() => {
   return onlineJmxItem.value.httpVO.httpParamVOList.some(item => item.paramKey || item.paramValue);
 });
 
+const loading = ref(false);
 const testCaseData = ref<TestCaseItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getTestCaseList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -1331,7 +1283,7 @@ const getList = () => {
     }
     testCaseData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 
 // 定时刷新数据
@@ -2845,61 +2797,6 @@ const handleCheckboxChange = (field: string, value: boolean) => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.drawer {
-  width: 75%;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.orange {
-  color: #ffA500;
-}
-.purple {
-  color: #7b68ee;
-}
-.ant-drawer-header {
-  display: none;
-}
-.test-case-descriptions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.test-case-descriptions-title {
-  color: var(--el-text-color-primary);
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.mr10 {
-  margin-right: 10px;
-}
 .bar-schart-box {
   display: inline-block;
   margin: 20px;
@@ -2907,93 +2804,25 @@ const handleCheckboxChange = (field: string, value: boolean) => {
 }
 .bar-schart {
   width: 100%;
-  height: 30vh; /* 设置图表的高度为视口高度的45% */
-  margin-bottom: 20px; /* 图表之间的间距 */
+  height: 30vh;
+  margin-bottom: 20px;
 }
 .horizontal-dropdown-menu {
-  display: flex; /* 使用 flexbox */
-  flex-direction: row; /* 横向排列 */
-  padding: 0; /* 去掉内边距（如果需要） */
+  display: flex;
+  flex-direction: row;
+  padding: 0;
 }
-
 .horizontal-dropdown-menu .el-dropdown-item {
-  padding: 10px 20px; /* 可以根据需要调整每个按钮的内边距 */
+  padding: 10px 20px;
 }
-
-/* 在样式表中定义六个类 */
-.status-not-executed {
-  background-color: #909399 !important;
-  color: #FFFFFF !important;
-  border-color: #909399 !important;
-}
-
-.status-executing {
-  background-color: #E6A23C !important;
-  color: #FFFFFF !important;
-  border-color: #E6A23C !important;
-}
-
-.status-success {
-  background-color: #67C23A !important;
-  color: #FFFFFF !important;
-  border-color: #67C23A !important;
-}
-
-.status-error {
-  background-color: #F56C6C !important;
-  color: #FFFFFF !important;
-  border-color: #F56C6C !important;
-}
-
-.status-waiting {
-  background-color: #409EFF !important;
-  color: #FFFFFF !important;
-  border-color: #409EFF !important;
-}
-
-.status-canceled {
-  background-color: #409EFF !important;
-  color: #FFFFFF !important;
-  border-color: #409EFF !important;
-}
-
-/* 日志内容样式 */
-.log-content {
-  max-height: 500px; /* 设置最大高度 */
-  overflow-y: auto; /* 允许垂直滚动 */
-  background-color: #1e1e1e; /* 日志背景色 */
-  color: #dcdcdc; /* 字体颜色 */
-  padding: 15px; /* 内边距 */
-  font-family: "Courier New", Courier, monospace; /* 等宽字体 */
-  font-size: 14px; /* 字体大小 */
-  border-radius: 4px; /* 边角圆滑 */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1); /* 内部阴影 */
-}
-
-/* 优化滚动条样式 */
-.log-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.log-content::-webkit-scrollbar-thumb {
-  background-color: #888; /* 滚动条颜色 */
-  border-radius: 4px; /* 滚动条圆角 */
-}
-
-.log-content::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* 滚动条悬停颜色 */
-}
-
 .fixed-save-button {
   position: absolute;
   bottom: 20px;
   left: 20px;
 }
-
 .error-input {
   border-color: red;
 }
-
 .error-message {
   color: red;
   font-size: 12px;

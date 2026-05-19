@@ -1,0 +1,246 @@
+/* ============================================
+   Mysterious Design Token System
+   分布式压测平台 — Data-Dense Dashboard
+   ============================================ */
+
+/* === Light Mode (default) === */
+:root {
+  /* Brand Colors */
+  --color-primary: #1E40AF;
+  --color-primary-hover: #1E3A8A;
+  --color-primary-light: #DBEAFE;
+  --color-secondary: #3B82F6;
+
+  /* Surface Colors */
+  --color-bg: #F0F2F5;
+  --color-bg-card: #FFFFFF;
+  --color-bg-muted: #E9EEF6;
+  --color-bg-elevated: #FFFFFF;
+
+  /* Text Colors */
+  --color-fg: #1E293B;
+  --color-fg-secondary: #64748B;
+  --color-fg-tertiary: #94A3B8;
+  --color-fg-inverse: #FFFFFF;
+
+  /* Border */
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+
+  /* Status Colors - WCAG AA compliant */
+  --color-success: #16A34A;
+  --color-success-bg: #DCFCE7;
+  --color-warning: #D97706;
+  --color-warning-bg: #FEF3C7;
+  --color-error: #DC2626;
+  --color-error-bg: #FEE2E2;
+  --color-info: #2563EB;
+  --color-info-bg: #DBEAFE;
+  --color-disabled: #9CA3AF;
+  --color-disabled-bg: #F3F4F6;
+
+  /* Sidebar */
+  --color-sidebar-bg: #1E293B;
+  --color-sidebar-fg: #CBD5E1;
+  --color-sidebar-hover: #334155;
+  --color-sidebar-active: #3B82F6;
+
+  /* Header */
+  --color-header-bg: #FFFFFF;
+  --color-header-fg: #1E293B;
+  --color-header-border: #E2E8F0;
+
+  /* Tags Bar */
+  --color-tags-bg: #FFFFFF;
+  --color-tags-border: #E2E8F0;
+
+  /* ======== Layout ======== */
+  --header-height: 56px;
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --tags-height: 38px;
+
+  /* ======== Typography ======== */
+  --font-mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-kpi: 32px;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ======== Spacing (4px grid) ======== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ======== Border Radius ======== */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* ======== Shadows ======== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  /* ======== Z-Index Scale ======== */
+  --z-sidebar: 40;
+  --z-header: 50;
+  --z-tags: 45;
+  --z-dropdown: 200;
+  --z-drawer: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* ======== Transitions ======== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+.dark,
+[data-theme="dark"] {
+  --color-primary: #60A5FA;
+  --color-primary-hover: #93BBFD;
+  --color-primary-light: #1E3A5F;
+  --color-secondary: #818CF8;
+
+  --color-bg: #0F172A;
+  --color-bg-card: #1E293B;
+  --color-bg-muted: #1E293B;
+  --color-bg-elevated: #334155;
+
+  --color-fg: #F1F5F9;
+  --color-fg-secondary: #94A3B8;
+  --color-fg-tertiary: #64748B;
+  --color-fg-inverse: #0F172A;
+
+  --color-border: #334155;
+  --color-border-light: #1E293B;
+
+  --color-success: #4ADE80;
+  --color-success-bg: #14532D;
+  --color-warning: #FBBF24;
+  --color-warning-bg: #78350F;
+  --color-error: #F87171;
+  --color-error-bg: #7F1D1D;
+  --color-info: #60A5FA;
+  --color-info-bg: #1E3A5F;
+  --color-disabled: #4B5563;
+  --color-disabled-bg: #374151;
+
+  --color-sidebar-bg: #0B1121;
+  --color-sidebar-fg: #CBD5E1;
+  --color-sidebar-hover: #1E293B;
+  --color-sidebar-active: #60A5FA;
+
+  --color-header-bg: #1E293B;
+  --color-header-fg: #F1F5F9;
+  --color-header-border: #334155;
+
+  --color-tags-bg: #1E293B;
+  --color-tags-border: #334155;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   Element Plus CSS Variable Overrides
+   Maps our tokens to EP's internal variables
+   ============================================ */
+:root {
+  /* EP primary */
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: var(--color-primary-light);
+  --el-color-primary-light-5: var(--color-primary-light);
+  --el-color-primary-light-7: var(--color-primary-light);
+  --el-color-primary-light-8: var(--color-primary-light);
+  --el-color-primary-light-9: var(--color-primary-light);
+  --el-color-primary-dark-2: var(--color-primary-hover);
+
+  /* EP status */
+  --el-color-success: var(--color-success);
+  --el-color-warning: var(--color-warning);
+  --el-color-danger: var(--color-error);
+  --el-color-info: var(--color-info);
+
+  /* EP backgrounds */
+  --el-bg-color: var(--color-bg);
+  --el-bg-color-page: var(--color-bg);
+  --el-bg-color-overlay: var(--color-bg-card);
+  --el-fill-color-blank: var(--color-bg-card);
+  --el-fill-color-light: var(--color-bg-muted);
+  --el-fill-color-lighter: var(--color-border-light);
+
+  /* EP text */
+  --el-text-color-primary: var(--color-fg);
+  --el-text-color-regular: var(--color-fg-secondary);
+  --el-text-color-secondary: var(--color-fg-tertiary);
+  --el-text-color-placeholder: var(--color-fg-tertiary);
+
+  /* EP border */
+  --el-border-color: var(--color-border);
+  --el-border-color-light: var(--color-border-light);
+  --el-border-color-lighter: var(--color-border-light);
+  --el-border-color-dark: var(--color-border);
+
+  /* EP radius */
+  --el-border-radius-base: var(--radius-md);
+  --el-border-radius-small: var(--radius-sm);
+  --el-border-radius-round: var(--radius-full);
+
+  /* EP typography */
+  --el-font-size-base: var(--text-base);
+  --el-font-size-small: var(--text-sm);
+  --el-font-size-extra-small: var(--text-xs);
+  --el-font-size-large: var(--text-lg);
+  --el-font-size-extra-large: var(--text-xl);
+
+  /* EP shadow */
+  --el-box-shadow-light: var(--shadow-sm);
+  --el-box-shadow: var(--shadow-md);
+  --el-box-shadow-dark: var(--shadow-lg);
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-fg-tertiary);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg-secondary);
+}

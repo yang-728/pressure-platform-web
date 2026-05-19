@@ -10,13 +10,9 @@
         <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
       </div>
 
-      <el-table :data="jarData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="jarData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
-        <el-table-column prop="srcName" label="名称" align="center">
-<!--          <template #default="scope">-->
-<!--            <div @click="handleJarDownload(scope.row.id, scope.row.dstName)" style="color: blue; cursor: pointer;">{{ scope.row.dstName }}</div>-->
-<!--          </template>-->
-        </el-table-column>
+        <el-table-column prop="srcName" label="名称" align="center"></el-table-column>
         <el-table-column prop="description" label="描述" align="center"></el-table-column>
         <el-table-column prop="testCaseId" label="用例" align="center">
           <template #default="scope">
@@ -25,16 +21,15 @@
         </el-table-column>
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
-<!--        <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>-->
-<!--        <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>-->
 
-        <el-table-column label="操作" width="120" align="center">
+        <el-table-column label="操作" width="100" align="right">
           <template #default="scope">
-            <el-button style="margin-left: 0" text :icon="Delete" class="red" @click="handleJarDelete(scope.row.id)" v-permiss="1">
-              删除
-            </el-button>
+            <div class="action-group">
+              <el-button text :icon="Delete" type="danger" @click="handleJarDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无依赖数据" /></template>
       </el-table>
 
       <div class="pagination">
@@ -67,9 +62,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const jarData = ref<JarItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getJarList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -79,7 +76,7 @@ const getList = () => {
     }
     jarData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -132,40 +129,4 @@ const handleJarDelete = async (id: number) => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
 </style>

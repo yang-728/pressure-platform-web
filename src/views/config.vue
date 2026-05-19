@@ -118,7 +118,7 @@
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
-      <el-table :data="configData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="configData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="configKey" label="配置字段" align="center"></el-table-column>
         <el-table-column prop="configValue" label="字段值" align="center"></el-table-column>
@@ -128,16 +128,15 @@
         <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>
         <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="140" align="right">
           <template #default="scope">
-            <el-button text :icon="Edit" class="bg-blue" @click="handleEdit(scope.row)" v-permiss="1">
-              编辑
-            </el-button>
-            <el-button text :icon="Delete" class="red" @click="handleDelete(scope.row.id)" v-permiss="1">
-              删除
-            </el-button>
+            <div class="action-group">
+              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无配置数据" /></template>
       </el-table>
 
       <div class="pagination">
@@ -224,9 +223,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const configData = ref<ConfigItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getConfigList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -236,7 +237,7 @@ const getList = () => {
     }
     configData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -450,40 +451,4 @@ const saveEdit = async () => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.blue {
-  color: #20a0ff;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
 </style>

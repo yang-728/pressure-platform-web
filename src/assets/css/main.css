@@ -1,137 +1,341 @@
+/* ============================================
+   Mysterious Global Styles
+   分布式压测平台 — Data-Dense Dashboard
+   ============================================ */
+
 * {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 html,
 body,
-#app,
-.wrapper {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
-    font-family: 'PingFang SC', "Helvetica Neue", Helvetica, "microsoft yahei", arial, STHeiTi, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
-    text-decoration: none
+  text-decoration: none;
+  color: var(--color-primary);
 }
 
-
+/* ============================================
+   Layout — CSS Grid
+   ============================================ */
 .content-box {
-    position: absolute;
-    left: 250px;
-    right: 0;
-    top: 70px;
-    bottom: 0;
-    padding-bottom: 30px;
-    -webkit-transition: left .3s ease-in-out;
-    transition: left .3s ease-in-out;
-    background: #f0f0f0;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--header-height) auto 1fr;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar tags"
+    "sidebar content";
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg);
+  transition: grid-template-columns var(--transition-slow);
+}
+.content-collapse {
+  grid-template-columns: var(--sidebar-collapsed) 1fr;
 }
 
 .content {
-    width: auto;
-    height: 100%;
-    padding: 10px;
-    overflow-y: scroll;
-    box-sizing: border-box;
+  grid-area: content;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg);
 }
 
-.content-collapse {
-    left: 65px;
-}
-
+/* ============================================
+   Container & Card
+   ============================================ */
 .container {
-    padding: 30px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
 }
 
-.crumbs {
-    margin: 10px 0;
+/* ============================================
+   Search / Handle Bar — shared across all list pages
+   ============================================ */
+.handle-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: nowrap;
+}
+.handle-input {
+  width: 120px;
+}
+.handle-select {
+  width: 140px;
+}
+.mr10 {
+  margin-right: 0; /* reset; gap handles spacing */
 }
 
-.el-table th {
-    background-color: #f5f7fa !important;
+/* ============================================
+   Table
+   ============================================ */
+.table {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+.el-table {
+  font-family: var(--font-sans);
+  --el-table-header-bg-color: var(--color-bg-muted);
+  --el-table-tr-bg-color: var(--color-bg-card);
+  --el-table-row-hover-bg-color: var(--color-bg-muted);
+}
+.el-table th.el-table__cell {
+  background-color: var(--color-bg-muted) !important;
+  color: var(--color-fg-secondary);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.el-table th.el-table__cell .cell {
+  text-align: center;
+}
+.el-table td.el-table__cell {
+  font-size: var(--text-sm);
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: var(--color-bg-muted);
+}
+.el-table .el-table__empty-text {
+  color: var(--color-fg-tertiary);
 }
 
+/* ============================================
+   Pagination
+   ============================================ */
 .pagination {
-    margin: 20px 0;
-    text-align: right;
+  margin: var(--space-4) 0 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.plugins-tips {
-    padding: 20px 10px;
-    margin-bottom: 20px;
+/* ============================================
+   Action Column — right align buttons
+   ============================================ */
+.action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: flex-end;
 }
 
-.el-button+.el-tooltip {
-    margin-left: 10px;
+/* ============================================
+   Color Utilities — shared action button colors
+   ============================================ */
+.red { color: var(--color-error); }
+.bg-blue { color: var(--color-primary); }
+.bg-green { color: var(--color-success); }
+.blue { color: #20a0ff; }
+.green { color: #00a854; }
+.orange { color: #ffA500; }
+.purple { color: #7b68ee; }
+
+/* ============================================
+   Status Tags — shared across views
+   ============================================ */
+.status-not-executed {
+  background-color: var(--color-disabled) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-disabled) !important;
+}
+.status-executing {
+  background-color: var(--color-warning) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-warning) !important;
+}
+.status-success {
+  background-color: var(--color-success) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-success) !important;
+}
+.status-error {
+  background-color: var(--color-error) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-error) !important;
+}
+.status-waiting {
+  background-color: var(--color-info) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-info) !important;
+}
+.status-canceled {
+  background-color: var(--color-fg-tertiary) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-fg-tertiary) !important;
 }
 
-.el-table tr:hover {
-    background: #f6faff;
+/* Execution-specific tag styles */
+.disabled {
+  background-color: var(--color-disabled) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-disabled) !important;
+}
+.enabled {
+  background-color: var(--color-success) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-success) !important;
+}
+.failed {
+  background-color: var(--color-error) !important;
+  color: #FFFFFF !important;
+  border-color: var(--color-error) !important;
 }
 
-.mgb20 {
-    margin-bottom: 20px;
+.exec-type-debug {
+  background-color: #DBEAFE !important;
+  color: #1E40AF !important;
+  border-color: #DBEAFE !important;
+}
+.exec-type-load {
+  background-color: #FEF3C7 !important;
+  color: #92400E !important;
+  border-color: #FEF3C7 !important;
 }
 
+/* ============================================
+   Live Status Indicator with Pulse
+   ============================================ */
+.live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.live-dot.running {
+  background: var(--color-warning);
+  animation: live-pulse 1.5s infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ID prefix tags (execution table) */
+.id-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.id-tag.running {
+  color: #D97706;
+  background: #FEF3C7;
+}
+.id-tag.scheduled {
+  color: #2563EB;
+  background: #DBEAFE;
+}
+
+/* ============================================
+   Log Content (dark terminal style)
+   ============================================ */
+.log-content {
+  overflow-y: auto;
+  background-color: #1E1E1E;
+  color: #D4D4D4;
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+  max-height: 70vh;
+}
+.log-content pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+.log-content::-webkit-scrollbar { width: 6px; }
+.log-content::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 3px;
+}
+.log-content::-webkit-scrollbar-thumb:hover {
+  background-color: #888;
+}
+
+/* ============================================
+   Table thumb / misc
+   ============================================ */
+.table-td-thumb {
+  display: block;
+  margin: auto;
+  width: 40px;
+  height: 40px;
+}
+.mgb20 { margin-bottom: var(--space-5); }
+
+/* ============================================
+   Page Transitions
+   ============================================ */
 .move-enter-active,
 .move-leave-active {
-    transition: opacity .1s ease;
+  transition: opacity var(--transition-fast);
 }
-
 .move-enter-from,
 .move-leave-to {
-    opacity: 0;
+  opacity: 0;
 }
 
-/*BaseForm*/
-
-.form-box {
-    width: 600px;
-}
-
-.form-box .line {
-    text-align: center;
-}
-
-.el-time-panel__content::after,
-.el-time-panel__content::before {
-    margin-top: -7px;
-}
-
-.el-time-spinner__wrapper .el-scrollbar__wrap:not(.el-scrollbar__wrap--hidden-default) {
-    padding-bottom: 0;
-}
-
-
-[class*=" el-icon-"], [class^=el-icon-] {
-    speak: none;
-    font-style: normal;
-    font-weight: 400;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-    vertical-align: baseline;
-    display: inline-block;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+/* ============================================
+   Element Plus Icon Fixes
+   ============================================ */
+[class*=" el-icon-"],
+[class^=el-icon-] {
+  speak: none;
+  font-style: normal;
+  font-weight: 400;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: baseline;
+  display: inline-block;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .el-sub-menu [class^=el-icon-] {
-    vertical-align: middle;
-    margin-right: 5px;
-    width: 24px;
-    text-align: center;
-    font-size: 18px;
+  vertical-align: middle;
+  margin-right: 5px;
+  width: 24px;
+  text-align: center;
+  font-size: 18px;
 }
 
-[hidden]{
-    display: none !important;
+[hidden] { display: none !important; }
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-fg-tertiary);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg-secondary);
 }

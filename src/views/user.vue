@@ -10,18 +10,21 @@
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
-      <el-table :data="userData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
+      <el-table :data="userData" stripe class="table" ref="multipleTable" v-loading="loading">
         <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
         <el-table-column prop="username" label="用户" align="center"></el-table-column>
         <el-table-column prop="password" label="密码" align="center"></el-table-column>
         <el-table-column prop="realName" label="姓名" align="center"></el-table-column>
         <el-table-column prop="effectTime" label="登录时间" align="center"></el-table-column>
         <el-table-column prop="expireTime" label="失效时间" align="center"></el-table-column>
-        <el-table-column label="操作" align="center" width="120">
+        <el-table-column label="操作" align="right" width="120">
           <template #default="scope">
-            <el-button type="text" @click="handleUpdatePassword(scope.row)">修改密码</el-button>
+            <div class="action-group">
+              <el-button text type="primary" @click="handleUpdatePassword(scope.row)">修改密码</el-button>
+            </div>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无用户数据" /></template>
       </el-table>
 
       <div class="pagination">
@@ -101,9 +104,11 @@ const query = reactive({
   size: 10
 });
 
+const loading = ref(false);
 const userData = ref<UserItem[]>([]);
 const total = ref(0);
 const getList = () => {
+  loading.value = true;
   getUserList(query).then(res => {
     checkToLogin(res.data.message);
     const code = res.data.code
@@ -113,7 +118,7 @@ const getList = () => {
     }
     userData.value = res.data.data.list;
     total.value = res.data.data.total || 10;
-  });
+  }).finally(() => { loading.value = false; });
 };
 getList();
 
@@ -220,37 +225,4 @@ const handleDelete = async (id: number) => {
 </script>
 
 <style scoped>
-.handle-box {
-  margin-bottom: 20px;
-}
-
-.handle-select {
-  width: 120px;
-}
-
-.handle-input {
-  width: 200px;
-}
-.table {
-  width: 100%;
-  font-size: 14px;
-}
-.bg-blue {
-  color: #409EFF;
-}
-.red {
-  color: #F56C6C;
-}
-.green {
-  color: #00a854;
-}
-.mr10 {
-  margin-right: 10px;
-}
-.table-td-thumb {
-  display: block;
-  margin: auto;
-  width: 40px;
-  height: 40px;
-}
 </style>

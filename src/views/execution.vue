@@ -1,117 +1,104 @@
 <template>
-  <div>
-    <div class="container">
-      <div class="handle-box">
-        <el-input v-model="query.region" placeholder="区域" class="handle-input mr10" style="width:150px"></el-input>
-        <el-input v-model="query.name" placeholder="用例名称" class="handle-input mr10" style="width:150px"></el-input>
-        <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
-      </div>
-
-      <el-table :data="tableData" border class="table" ref="multipleTable" header-cell-class-name="table-header">
-        <el-table-column prop="id" label="编号" width="70" align="center"></el-table-column>
-        <el-table-column prop="testCaseId" label="用例" align="center">
-          <template #default="scope">
-            {{ testcaseNameMap[scope.row.testCaseId] || scope.row.testCaseId }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="region" label="区域" align="center">
-          <template #default="scope">
-            <el-tag v-if="scope.row.region" type="info">{{ scope.row.region }}</el-tag>
-            <span v-else>全部</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="rowType" label="类型" align="center" width="100">
-          <template #default="scope">
-            <template v-if="scope.row.rowType === 'report'">
-              <el-tag v-if="scope.row.execType === 1" type="warning">调试</el-tag>
-              <el-tag v-else type="primary">执行</el-tag>
-            </template>
-            <template v-else>
-              <el-tag v-if="scope.row.scheduleType === 'once'" type="success">仅一次</el-tag>
-              <el-tag v-else-if="scope.row.scheduleType === 'daily'" type="primary">每日</el-tag>
-              <el-tag v-else-if="scope.row.scheduleType === 'weekly'" type="warning">每周</el-tag>
-              <el-tag v-else type="info">每月</el-tag>
-            </template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" align="center" width="90">
-          <template #default="scope">
-            <template v-if="scope.row.rowType === 'report'">
-              <el-tag type="warning">运行中</el-tag>
-            </template>
-            <template v-else>
-              <el-tag type="info">等待中</el-tag>
-            </template>
-          </template>
-        </el-table-column>
-        <el-table-column prop="runTime" label="执行时间" align="center"></el-table-column>
-        <el-table-column label="操作" width="240" align="center">
-          <template #default="scope">
-            <template v-if="scope.row.rowType === 'report'">
-              <el-button text :icon="Close" class="red"
-                @click="handleStop(scope.row.reportId)">停止</el-button>
-              <el-button v-if="scope.row.execType === 2" text :icon="TrendCharts" class="bg-blue"
-                @click="openChartDialog(scope.row.reportId)">曲线</el-button>
-            </template>
-            <template v-else>
-              <el-button text :icon="VideoPlay" class="bg-green"
-                @click="handleTriggerNow(scope.row.scheduleId)">立即执行</el-button>
-              <el-button text :icon="Edit" class="bg-blue"
-                @click="openScheduleEdit(scope.row)">编辑</el-button>
-              <el-button text :icon="Delete" class="red"
-                @click="handleDeleteSchedule(scope.row.scheduleId)">删除</el-button>
-            </template>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination">
-        <el-pagination background layout="total, prev, pager, next"
-          :current-page="query.page" :page-size="query.size" :total="total"
-          @current-change="handlePageChange"></el-pagination>
-      </div>
+  <div class="container">
+    <!-- Search -->
+    <div class="handle-box">
+      <el-input v-model="query.region" placeholder="区域" class="handle-input" style="width:150px" clearable />
+      <el-input v-model="query.name" placeholder="用例名称" class="handle-input" style="width:180px" clearable />
+      <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+      <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+      <span class="auto-refresh">
+        <span class="live-dot running"></span>每 15s 自动刷新
+      </span>
     </div>
 
-    <!-- 定时任务编辑弹出框 -->
-    <el-dialog title="编辑定时任务" v-model="scheduleVisible" width="35%">
+    <!-- Table -->
+    <el-table :data="tableData" stripe class="table" ref="multipleTable" size="medium">
+      <el-table-column label="编号" width="80" align="center">
+        <template #default="{ row }">
+          <span :class="row.rowType === 'report' ? 'id-tag running' : 'id-tag scheduled'">
+            {{ row.id }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="testCaseId" label="用例" min-width="130" align="center">
+        <template #default="{ row }">
+          {{ testcaseNameMap[row.testCaseId] || row.testCaseId }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="region" label="区域" align="center" width="90">
+        <template #default="{ row }">
+          <el-tag v-if="row.region" size="small" type="info">{{ row.region }}</el-tag>
+          <span v-else style="color:var(--color-fg-tertiary);font-size:12px">全部</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="rowType" label="类型" align="center" width="100">
+        <template #default="{ row }">
+          <template v-if="row.rowType === 'report'">
+            <el-tag v-if="row.execType === 1" size="small" type="warning" effect="dark">调试</el-tag>
+            <el-tag v-else size="small" effect="dark">执行</el-tag>
+          </template>
+          <template v-else>
+            <el-tag v-if="row.scheduleType === 'once'" size="small" type="success" effect="plain">仅一次</el-tag>
+            <el-tag v-else-if="row.scheduleType === 'daily'" size="small" effect="plain">每日</el-tag>
+            <el-tag v-else-if="row.scheduleType === 'weekly'" size="small" type="warning" effect="plain">每周</el-tag>
+            <el-tag v-else size="small" type="info" effect="plain">每月</el-tag>
+          </template>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" align="center" width="100">
+        <template #default="{ row }">
+          <template v-if="row.rowType === 'report'">
+            <span class="inline-dot running"></span>运行中
+          </template>
+          <template v-else>
+            <span style="color:var(--color-fg-tertiary);font-size:12px">等待中</span>
+          </template>
+        </template>
+      </el-table-column>
+      <el-table-column prop="runTime" label="执行时间" align="center" min-width="160"></el-table-column>
+      <el-table-column label="操作" width="260" align="right">
+        <template #default="{ row }">
+          <div class="action-group">
+            <template v-if="row.rowType === 'report'">
+              <el-button text type="danger" size="small" :icon="Close" @click="handleStop(row.reportId)">停止</el-button>
+              <el-button v-if="row.execType === 2" text type="primary" size="small" :icon="TrendCharts" @click="openChartDialog(row.reportId)">曲线</el-button>
+            </template>
+            <template v-else>
+              <el-button text type="success" size="small" :icon="VideoPlay" @click="handleTriggerNow(row.scheduleId)">立即执行</el-button>
+              <el-button text type="primary" size="small" :icon="Edit" @click="openScheduleEdit(row)">编辑</el-button>
+              <el-button text type="danger" size="small" :icon="Delete" @click="handleDeleteSchedule(row.scheduleId)">删除</el-button>
+            </template>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div class="pagination">
+      <el-pagination background layout="total, prev, pager, next"
+        :current-page="query.page" :page-size="query.size" :total="total"
+        @current-change="handlePageChange" size="small" />
+    </div>
+
+    <!-- Schedule Edit Dialog -->
+    <el-dialog title="编辑定时任务" v-model="scheduleVisible" width="540px" destroy-on-close>
       <el-form label-width="90px">
         <el-form-item label="执行方式">
           <el-radio-group v-model="scheduleForm.scheduleType">
-            <el-radio label="once">仅执行一次</el-radio>
-            <el-radio label="daily">每日</el-radio>
-            <el-radio label="weekly">每周</el-radio>
-            <el-radio label="monthly">每月</el-radio>
+            <el-radio-button label="once">仅执行一次</el-radio-button>
+            <el-radio-button label="daily">每日</el-radio-button>
+            <el-radio-button label="weekly">每周</el-radio-button>
+            <el-radio-button label="monthly">每月</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="scheduleForm.scheduleType === 'once'" label="执行时间">
-          <el-date-picker
-              v-model="scheduleForm.onceDateTime"
-              type="datetime"
-              placeholder="选择日期时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-              style="width:100%">
-          </el-date-picker>
+          <el-date-picker v-model="scheduleForm.onceDateTime" type="datetime" placeholder="选择日期时间" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
         </el-form-item>
         <el-form-item v-if="scheduleForm.scheduleType === 'daily'" label="执行时间">
-          <el-time-picker
-              v-model="scheduleForm.dailyTime"
-              placeholder="选择时间"
-              format="HH:mm"
-              value-format="HH:mm"
-              style="width:100%">
-          </el-time-picker>
+          <el-time-picker v-model="scheduleForm.dailyTime" placeholder="选择时间" format="HH:mm" value-format="HH:mm" style="width:100%" />
         </el-form-item>
         <template v-if="scheduleForm.scheduleType === 'weekly'">
           <el-form-item label="执行时间">
-            <el-time-picker
-                v-model="scheduleForm.weeklyTime"
-                placeholder="选择时间"
-                format="HH:mm"
-                value-format="HH:mm"
-                style="width:100%">
-            </el-time-picker>
+            <el-time-picker v-model="scheduleForm.weeklyTime" placeholder="选择时间" format="HH:mm" value-format="HH:mm" style="width:100%" />
           </el-form-item>
           <el-form-item label="执行日">
             <el-checkbox-group v-model="scheduleForm.daysOfWeek">
@@ -127,52 +114,44 @@
         </template>
         <template v-if="scheduleForm.scheduleType === 'monthly'">
           <el-form-item label="执行时间">
-            <el-time-picker
-                v-model="scheduleForm.monthlyTime"
-                placeholder="选择时间"
-                format="HH:mm"
-                value-format="HH:mm"
-                style="width:100%">
-            </el-time-picker>
+            <el-time-picker v-model="scheduleForm.monthlyTime" placeholder="选择时间" format="HH:mm" value-format="HH:mm" style="width:100%" />
           </el-form-item>
           <el-form-item label="每月日">
-            <el-input-number v-model="scheduleForm.dayOfMonth" :min="1" :max="28" :step="1" step-strictly></el-input-number>
-            <span style="margin-left:8px;color:#909399;font-size:12px">建议1-28日以确保每月都可执行</span>
+            <el-input-number v-model="scheduleForm.dayOfMonth" :min="1" :max="28" :step="1" step-strictly />
+            <span class="form-hint">建议1-28日以确保每月都可执行</span>
           </el-form-item>
         </template>
         <el-divider content-position="left">压测参数</el-divider>
         <el-form-item label="并发数">
-          <el-input v-model="scheduleForm.runParam.numThreads" placeholder="并发线程数，如 100"></el-input>
+          <el-input v-model="scheduleForm.runParam.numThreads" placeholder="并发线程数，如 100" />
         </el-form-item>
         <el-form-item label="启动时间">
-          <el-input v-model="scheduleForm.runParam.rampTime" placeholder="Ramp-Up 秒数，如 10"></el-input>
+          <el-input v-model="scheduleForm.runParam.rampTime" placeholder="Ramp-Up 秒数，如 10" />
         </el-form-item>
         <el-form-item label="运行时间">
-          <el-input v-model="scheduleForm.runParam.duration" placeholder="持续时间 秒数，如 300"></el-input>
+          <el-input v-model="scheduleForm.runParam.duration" placeholder="持续时间 秒数，如 300" />
         </el-form-item>
         <el-form-item label="目标区域">
           <el-select v-model="scheduleForm.runParam.region" placeholder="全部区域" @change="onScheduleRegionChange" style="width:100%">
-            <el-option key="" label="全部区域" value=""></el-option>
-            <el-option v-for="r in regionList" :key="r" :label="r" :value="r"></el-option>
+            <el-option key="" label="全部区域" value="" />
+            <el-option v-for="r in regionList" :key="r" :label="r" :value="r" />
           </el-select>
         </el-form-item>
         <el-form-item label="压力机数">
-          <el-input-number v-model="scheduleForm.runParam.slaveCount" :min="1" :max="maxSlaveCount" :step="1" :disabled="maxSlaveCount <= 1"></el-input-number>
-          <span style="margin-left:8px;color:#909399;font-size:12px">可用 {{ maxSlaveCount }} 台</span>
+          <el-input-number v-model="scheduleForm.runParam.slaveCount" :min="1" :max="maxSlaveCount" :step="1" :disabled="maxSlaveCount <= 1" />
+          <span class="form-hint">可用 {{ maxSlaveCount }} 台</span>
         </el-form-item>
       </el-form>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="scheduleVisible = false">取 消</el-button>
-          <el-button type="primary" @click="confirmScheduleEdit">确 定</el-button>
-        </span>
+        <el-button @click="scheduleVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmScheduleEdit">确定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 曲线图弹出框 -->
-    <el-dialog title="实时数据" v-model="chartDialogVisible" width="60%">
-      <schart class="bar-schart" canvasId="throughputChart" :options="throughputChart"></schart>
-      <schart class="bar-schart" canvasId="responseTimeChart" :options="responseTimeChart"></schart>
+    <!-- Chart Dialog -->
+    <el-dialog title="实时数据" v-model="chartDialogVisible" width="820px" destroy-on-close>
+      <schart class="bar-schart" canvasId="throughputChart" :options="throughputChart" />
+      <schart class="bar-schart" canvasId="responseTimeChart" :options="responseTimeChart" />
     </el-dialog>
   </div>
 </template>
@@ -239,7 +218,6 @@ const getList = async () => {
 
   const rows: TableRow[] = [];
 
-  // 运行中的执行
   if (reportRes.data.code === 0) {
     const reports = (reportRes.data.data.list as any[]).filter((r: any) => r.status === 1);
     for (const r of reports) {
@@ -256,7 +234,6 @@ const getList = async () => {
     }
   }
 
-  // 定时任务
   if (scheduleRes.data.code === 0) {
     const tasks = scheduleRes.data.data.list as any[];
     for (const t of tasks) {
@@ -321,7 +298,6 @@ const handleTriggerNow = async (scheduleId: number) => {
   }
 };
 
-// ---------- 定时任务编辑 ----------
 const scheduleVisible = ref(false);
 const editingScheduleId = ref<number | null>(null);
 const maxSlaveCount = ref(1);
@@ -346,10 +322,8 @@ const scheduleForm = reactive({
 
 const openScheduleEdit = async (row: TableRow) => {
   editingScheduleId.value = row.scheduleId!;
-  // Parse schedule_data
   let sd: any = {};
   try { sd = JSON.parse(row._scheduleData || '{}'); } catch { /* ignore */ }
-  // Parse run_param
   let rp: any = {};
   try { rp = JSON.parse(row._runParam || '{}'); } catch { /* ignore */ }
 
@@ -448,7 +422,6 @@ const onScheduleRegionChange = async () => {
   } catch { /* ignore */ }
 };
 
-// ---------- 曲线弹窗 ----------
 const chartDialogVisible = ref(false);
 const currentReportId = ref(0);
 let chartTimer: ReturnType<typeof setInterval> | null = null;
@@ -505,13 +478,33 @@ watch(chartDialogVisible, (visible) => {
 </script>
 
 <style scoped>
-.handle-box { margin-bottom: 20px; }
-.handle-input { width: 120px; }
-.mr10 { margin-right: 10px; }
-.table { width: 100%; font-size: 14px; }
-.red { color: #EF5350; }
-.bg-blue { color: #409EFF; }
-.bg-green { color: #67C23A; }
-.pagination { margin-top: 20px; display: flex; justify-content: flex-end; }
-.bar-schart { width: 100%; height: 30vh; margin-bottom: 20px; }
+.auto-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-fg-tertiary);
+}
+.inline-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.inline-dot.running {
+  background: var(--color-warning);
+  animation: live-pulse 1.5s infinite;
+}
+.form-hint {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--color-fg-tertiary);
+}
+.bar-schart {
+  width: 100%;
+  height: 30vh;
+  margin-bottom: 20px;
+}
 </style>
