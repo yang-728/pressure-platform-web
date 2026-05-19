@@ -89,7 +89,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'User',
                 meta: {
                     title: '用户管理',
-                    permiss: '1',
+                    permiss: '11',
                 },
                 component: () => import('../views/user.vue'),
             },

@@ -105,7 +105,7 @@ const executeItems = [
 const systemItems = [
   { icon: Monitor, path: '/node', label: '节点管理', permiss: '1' },
   { icon: Tickets, path: '/config', label: '配置管理', permiss: '1' },
-  { icon: UserFilled, path: '/user', label: '用户管理', permiss: '1' },
+  { icon: UserFilled, path: '/user', label: '用户管理', permiss: '11' },
 ];
 
 const route = useRoute();

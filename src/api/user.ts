@@ -39,6 +39,7 @@ export const deleteUser = (id: number) => {
 }
 
 export const updatePassword = (body: {
+    id: number,
     oldPassword: string,
     newPassword: string
 }) => {

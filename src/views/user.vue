@@ -16,7 +16,6 @@
         <el-table-column prop="password" label="密码" align="center"></el-table-column>
         <el-table-column prop="realName" label="姓名" align="center"></el-table-column>
         <el-table-column prop="effectTime" label="登录时间" align="center"></el-table-column>
-        <el-table-column prop="expireTime" label="失效时间" align="center"></el-table-column>
         <el-table-column label="操作" align="right" width="200">
           <template #default="scope">
             <div class="action-group">
@@ -43,11 +42,11 @@
 
     <!-- 新增弹出框 -->
     <el-dialog title="新增" v-model="insertVisible" width="30%">
-      <el-form label-width="70px">
-        <el-form-item label="用户">
+      <el-form ref="insertFormRef" :model="insertForm" :rules="insertRules" label-width="70px">
+        <el-form-item label="用户" prop="username">
           <el-input v-model="insertForm.username"></el-input>
         </el-form-item>
-        <el-form-item label="密码">
+        <el-form-item label="密码" prop="password">
           <el-input v-model="insertForm.password"></el-input>
         </el-form-item>
         <el-form-item label="姓名">
@@ -63,9 +62,9 @@
     </el-dialog>
 
     <!-- 修改密码弹出框 -->
-    <el-dialog title="修改密码" v-model="pwdVisible" width="30%">
+    <el-dialog :title="pwdDialogTitle" v-model="pwdVisible" width="30%">
       <el-form label-width="90px">
-        <el-form-item label="旧密码">
+        <el-form-item label="旧密码" v-if="pwdIsSelf">
           <el-input type="password" v-model="pwdForm.oldPassword" placeholder="请输入旧密码"></el-input>
         </el-form-item>
         <el-form-item label="新密码">
@@ -83,7 +82,9 @@
 </template>
 
 <script setup lang="ts" name="baseUser">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import type { FormInstance, FormRules } from 'element-plus';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import { Plus, Search, Delete, Refresh } from '@element-plus/icons-vue';
 import {addUser, deleteUser, getUserList, updatePassword} from "../api/user";
@@ -97,6 +98,9 @@ interface UserItem {
   effectTime: string;
   expireTime: string;
 }
+
+const router = useRouter();
+const currentUsername = localStorage.getItem('ms_username') || '';
 
 const query = reactive({
   username: null,
@@ -145,20 +149,30 @@ const handlePageChange = (val: number) => {
 
 // 表格新增时弹窗和保存
 const insertVisible = ref(false);
+const insertFormRef = ref<FormInstance>();
 let insertForm = reactive({
-  username: null,
-  password: null,
-  realName: null
+  username: '',
+  password: '',
+  realName: ''
 });
 
+const insertRules: FormRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+};
+
 const handleInsert = () => {
-  insertForm.username = null;
-  insertForm.password = null;
-  insertForm.realName = null;
+  insertForm.username = '';
+  insertForm.password = '';
+  insertForm.realName = '';
   insertVisible.value = true;
 };
 
 const saveInsert = async () => {
+  if (!insertFormRef.value) return;
+  const valid = await insertFormRef.value.validate().catch(() => false);
+  if (!valid) return;
+
   const res = await addUser(insertForm);
 
   const code = res.data.code;
@@ -186,14 +200,23 @@ const saveInsert = async () => {
 
 // 修改密码弹窗和保存
 const pwdVisible = ref(false);
-let pwdForm = reactive({
+const pwdForm = reactive({
+  id: 0,
   oldPassword: null,
   newPassword: null
 });
+const pwdTargetUsername = ref('');
+const pwdIsSelf = computed(() => pwdTargetUsername.value === currentUsername);
+const pwdDialogTitle = computed(() => {
+  if (pwdIsSelf.value) return '修改密码';
+  return `重置密码 - ${pwdTargetUsername.value}`;
+});
 
 const handleUpdatePassword = (row: UserItem) => {
+  pwdForm.id = row.id;
   pwdForm.oldPassword = null;
   pwdForm.newPassword = null;
+  pwdTargetUsername.value = row.username;
   pwdVisible.value = true;
 };
 
@@ -203,8 +226,13 @@ const savePassword = async () => {
   if (code !== 0) {
     ElMessage.error(res.data.message);
   } else {
-    ElMessage.success("修改密码成功");
+    ElMessage.success("修改密码成功，请重新登录");
     pwdVisible.value = false;
+    // 修改密码后 token 已失效，清理并跳转登录页
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_username');
+    localStorage.removeItem('ms_keys');
+    router.push('/login');
   }
 };
 

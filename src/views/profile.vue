@@ -24,10 +24,6 @@
             <span class="meta-label">登录时间</span>
             <span class="meta-value">{{ currentUser.effectTime || '-' }}</span>
           </div>
-          <div class="meta-item">
-            <span class="meta-label">失效时间</span>
-            <span class="meta-value">{{ currentUser.expireTime || '-' }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -75,12 +71,8 @@
             </span>
           </div>
           <div class="info-item">
-            <span class="info-label">生效时间</span>
+            <span class="info-label">登录时间</span>
             <span class="info-value mono">{{ currentUser.effectTime || '-' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">失效时间</span>
-            <span class="info-value mono">{{ currentUser.expireTime || '-' }}</span>
           </div>
         </div>
       </div>
@@ -130,9 +122,12 @@
 
 <script setup lang="ts" name="Profile">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { User, Lock } from '@element-plus/icons-vue';
 import { getUserList, updatePassword } from '../api/user';
+
+const router = useRouter();
 
 interface UserItem {
   id: number;
@@ -193,6 +188,7 @@ const savePassword = async () => {
   }
   try {
     const res = await updatePassword({
+      id: currentUser.value.id || 0,
       oldPassword: pwdForm.value.oldPassword,
       newPassword: pwdForm.value.newPassword,
     });
@@ -200,8 +196,13 @@ const savePassword = async () => {
       ElMessage.error(res.data.message || '修改失败');
       return;
     }
-    ElMessage.success('密码修改成功');
+    ElMessage.success('密码修改成功，请重新登录');
     pwdForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' };
+    // 修改密码后 token 已失效，清理并跳转登录页
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_username');
+    localStorage.removeItem('ms_keys');
+    router.push('/login');
   } catch {
     ElMessage.error('修改失败，请重试');
   }
