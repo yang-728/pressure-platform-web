@@ -7,7 +7,7 @@
 
 
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
       </div>
 
       <el-table :data="reportData" stripe class="table" ref="multipleTable" v-loading="loading">
@@ -21,16 +21,16 @@
         </el-table-column>
         <el-table-column prop="execType" label="类型" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.execType === 1" class="exec-type-debug">调试</el-tag>
-            <el-tag v-if="scope.row.execType === 2" class="exec-type-load">压测</el-tag>
+            <span v-if="scope.row.execType === 1" class="state-pill sp-debug">调试</span>
+            <span v-if="scope.row.execType === 2" class="state-pill sp-load">压测</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 0" class="status-not-executed">没有执行</el-tag>
-            <el-tag v-if="scope.row.status === 1" class="status-executing">正在执行</el-tag>
-            <el-tag v-if="scope.row.status === 2" class="status-success">执行成功</el-tag>
-            <el-tag v-if="scope.row.status === 3" class="status-error">执行异常</el-tag>
+            <span v-if="scope.row.status === 0" class="state-pill sp-idle"><span class="sp-dot"></span>没有执行</span>
+            <span v-if="scope.row.status === 1" class="state-pill sp-running"><span class="sp-dot"></span>正在执行</span>
+            <span v-if="scope.row.status === 2" class="state-pill sp-success"><span class="sp-dot"></span>执行成功</span>
+            <span v-if="scope.row.status === 3" class="state-pill sp-error"><span class="sp-dot"></span>执行异常</span>
           </template>
         </el-table-column>
         <el-table-column prop="responseData" label="结果" align="center"></el-table-column>

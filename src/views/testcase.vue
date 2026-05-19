@@ -1,26 +1,91 @@
 <template>
   <div>
+    <!-- ====== KPI Strip ====== -->
+    <div class="kpi-strip">
+      <div class="kpi-card kpi-primary">
+        <div class="kpi-icon">
+          <el-icon :size="18"><VideoPlay /></el-icon>
+        </div>
+        <div class="kpi-meta">
+          <span class="kpi-label">运行中</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value">{{ stats.running }}</span>
+            <span v-if="stats.running > 0" class="kpi-pulse"></span>
+          </div>
+          <span class="kpi-delta neutral">实时计数</span>
+        </div>
+        <svg class="kpi-spark" viewBox="0 0 100 30" preserveAspectRatio="none">
+          <polyline points="0,20 12,15 24,18 36,10 48,12 60,6 72,8 84,4 100,2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-amber">
+          <el-icon :size="18"><Timer /></el-icon>
+        </div>
+        <div class="kpi-meta">
+          <span class="kpi-label">未执行</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value">{{ stats.idle }}</span>
+          </div>
+          <span class="kpi-delta neutral">待执行用例</span>
+        </div>
+        <svg class="kpi-spark sp-amber" viewBox="0 0 100 30" preserveAspectRatio="none">
+          <polyline points="0,22 12,18 24,20 36,14 48,16 60,10 72,8 84,12 100,6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-green">
+          <el-icon :size="18"><Select /></el-icon>
+        </div>
+        <div class="kpi-meta">
+          <span class="kpi-label">成功率</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value">{{ stats.successRate }}<small>%</small></span>
+          </div>
+          <span class="kpi-delta neutral">历史累计 · {{ stats.success }} 成功 / {{ stats.error }} 失败</span>
+        </div>
+        <div class="kpi-progress"><span :style="{ width: stats.successRate + '%' }"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ki-violet">
+          <el-icon :size="18"><Document /></el-icon>
+        </div>
+        <div class="kpi-meta">
+          <span class="kpi-label">用例总数</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value">{{ total }}</span>
+          </div>
+          <span class="kpi-delta neutral">已搜索结果</span>
+        </div>
+        <div class="kpi-cluster">
+          <span v-for="i in 8" :key="i" :class="['node-dot', i <= Math.min(8, Math.ceil(total / Math.max(1, total) * 8)) ? 'on' : '']"></span>
+        </div>
+      </div>
+    </div>
+
     <div class="container">
-      <div class="handle-box">
-        <!--        <el-input v-model="query.id" placeholder="编号" class="handle-input mr10"></el-input>-->
+      <div class="handle-box" style="flex-wrap:nowrap">
         <el-input
             v-model.number="query.id"
             type="number"
             placeholder="编号"
             class="handle-input mr10"
+            style="width:90px"
             @input="v => query.id = v.replace(/[^\d]/g, '')"
         ></el-input>
-        <el-input v-model="query.name" placeholder="名称" class="handle-input mr10"></el-input>
-        <el-select v-model="query.biz" placeholder="产品线" class="handle-select mr10" clearable filterable>
+        <el-input v-model="query.name" placeholder="名称" class="handle-input mr10" style="width:130px"></el-input>
+        <el-select v-model="query.biz" placeholder="产品线" class="handle-select mr10" style="width:120px" clearable filterable>
           <el-option v-for="item in bizOptions" :key="item" :label="item" :value="item"></el-option>
         </el-select>
-        <el-select v-model="query.service" placeholder="服务" class="handle-select mr10" clearable filterable>
+        <el-select v-model="query.service" placeholder="服务" class="handle-select mr10" style="width:120px" clearable filterable>
           <el-option v-for="item in serviceOptions" :key="item" :label="item" :value="item"></el-option>
         </el-select>
 
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
-        <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        <span style="flex:1"></span>
+        <span class="auto-refresh"><span class="ar-dot"></span>每 10s 自动刷新</span>
+        <el-button type="primary" :icon="Plus" @click="handleInsert">新增用例</el-button>
       </div>
 
       <el-table :data="testCaseData" stripe class="table" ref="multipleTable" v-loading="loading">
@@ -32,12 +97,12 @@
         <el-table-column prop="version" label="版本" align="center"></el-table-column>
         <el-table-column prop="status" label="状态" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 0" class="status-not-executed">没有执行</el-tag>
-            <el-tag v-if="scope.row.status === 1" class="status-executing">正在执行</el-tag>
-            <el-tag v-if="scope.row.status === 2" class="status-success">执行成功</el-tag>
-            <el-tag v-if="scope.row.status === 3" class="status-error">执行异常</el-tag>
-            <el-tag v-if="scope.row.status === 4" class="status-waiting">排队等待</el-tag>
-            <el-tag v-if="scope.row.status === 5" class="status-canceled">排队取消</el-tag>
+            <span v-if="scope.row.status === 0" class="state-pill sp-idle"><span class="sp-dot"></span>没有执行</span>
+            <span v-if="scope.row.status === 1" class="state-pill sp-running"><span class="sp-dot"></span>正在执行</span>
+            <span v-if="scope.row.status === 2" class="state-pill sp-success"><span class="sp-dot"></span>执行成功</span>
+            <span v-if="scope.row.status === 3" class="state-pill sp-error"><span class="sp-dot"></span>执行异常</span>
+            <span v-if="scope.row.status === 4" class="state-pill sp-waiting"><span class="sp-dot"></span>排队等待</span>
+            <span v-if="scope.row.status === 5" class="state-pill sp-idle"><span class="sp-dot"></span>排队取消</span>
           </template>
         </el-table-column>
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
@@ -56,10 +121,18 @@
                 <el-button text :icon="Right" type="primary" v-permiss="1">执行</el-button>
                 <template #dropdown>
                   <el-dropdown-menu class="horizontal-dropdown-menu">
-                    <el-dropdown-item class="dropdown-button" style="background-color:#BBDEFB;color:#0D47A1" @click="debugAction(scope.row.id)">调试</el-dropdown-item>
-                    <el-dropdown-item class="dropdown-button" style="background-color:#FFE0B2;color:#E65100" @click="openRunDialog(scope.row)">压测</el-dropdown-item>
-                    <el-dropdown-item class="dropdown-button" style="background-color:#C8E6C9;color:#1B5E20" @click="openScheduleDialog(scope.row)">定时压测</el-dropdown-item>
-                    <el-dropdown-item class="dropdown-button" style="background-color:#FFABAB;color:#C62828" @click="stopAction(scope.row.id)">停止</el-dropdown-item>
+                    <el-dropdown-item class="dropdown-button" @click="debugAction(scope.row.id)"
+                      ><span class="state-pill sp-debug">调试</span></el-dropdown-item
+                    >
+                    <el-dropdown-item class="dropdown-button" @click="openRunDialog(scope.row)"
+                      ><span class="state-pill sp-load">压测</span></el-dropdown-item
+                    >
+                    <el-dropdown-item class="dropdown-button" @click="openScheduleDialog(scope.row)"
+                      ><span class="state-pill sp-success">定时压测</span></el-dropdown-item
+                    >
+                    <el-dropdown-item class="dropdown-button" @click="stopAction(scope.row.id)"
+                      ><span class="state-pill sp-error">停止</span></el-dropdown-item
+                    >
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -1148,7 +1221,7 @@
 <script setup lang="ts" name="baseTestCase">
 import {ref, reactive, onUnmounted, onMounted, computed, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
-import { Plus, Search, Delete, Edit, Refresh, Right, Upload } from '@element-plus/icons-vue';
+import { Plus, Search, Delete, Edit, Refresh, Right, Upload, VideoPlay, Timer, Select, Document } from '@element-plus/icons-vue';
 import {
   addTestCase, debugTestCase,
   deleteTestCase, getFull,
@@ -1164,6 +1237,7 @@ import {deleteCsv, viewCsv, uploadCsv, downloadCsv} from "../api/csv";
 import {addOnlineJmx, deleteJmx, viewJmx, getOnlineJmx, updateOnlineJmx, uploadJmx, downloadJmx} from "../api/jmx";
 import {deleteJar, downloadJar, uploadJar} from "../api/jar";
 import {getEnableSlaveCount, getRegions} from "../api/node";
+import {getReportList} from "../api/report";
 import router from "../router";
 import {checkToLogin} from "../common/push";
 import {useRoute} from "vue-router";
@@ -1272,6 +1346,33 @@ const isBodyDisabled = computed(() => {
 const loading = ref(false);
 const testCaseData = ref<TestCaseItem[]>([]);
 const total = ref(0);
+
+// 历史执行结果统计（用于 KPI）
+const reportStats = ref({ success: 0, error: 0, total: 0 });
+const loadReportStats = async () => {
+  try {
+    const res = await getReportList({ page: 1, size: 9999 });
+    if (res.data.code === 0) {
+      const list = res.data.data.list || [];
+      reportStats.value = {
+        success: list.filter((r: any) => r.status == 2).length,
+        error: list.filter((r: any) => r.status == 3).length,
+        total: res.data.data.total || 0
+      };
+    }
+  } catch { /* ignore */ }
+};
+
+// KPI 统计
+const stats = computed(() => {
+  const list = testCaseData.value || [];
+  const running = list.filter(t => t.status == 1).length;
+  const idle = list.filter(t => t.status == 0).length;
+  const rs = reportStats.value;
+  const executed = rs.success + rs.error;
+  const successRate = executed === 0 ? 100 : Math.round((rs.success / executed) * 1000) / 10;
+  return { running, idle, success: rs.success, error: rs.error, successRate };
+});
 const getList = () => {
   loading.value = true;
   getTestCaseList(query).then(res => {
@@ -1290,7 +1391,8 @@ const getList = () => {
 let interval: ReturnType<typeof setInterval>;
 onMounted(() => {
   getList(); // 页面加载时获取一次数据
-  interval = setInterval(getList, 10000); // 每10秒刷新一次
+  loadReportStats(); // 加载历史执行结果统计
+  interval = setInterval(() => { getList(); loadReportStats(); }, 10000); // 每10秒刷新一次
 });
 
 onUnmounted(() => {
@@ -2810,10 +2912,15 @@ const handleCheckboxChange = (field: string, value: boolean) => {
 .horizontal-dropdown-menu {
   display: flex;
   flex-direction: row;
-  padding: 0;
+  padding: 6px;
+  gap: 4px;
 }
 .horizontal-dropdown-menu .el-dropdown-item {
-  padding: 10px 20px;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+}
+.horizontal-dropdown-menu .el-dropdown-item:hover {
+  background: var(--color-bg-muted);
 }
 .fixed-save-button {
   position: absolute;

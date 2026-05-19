@@ -6,7 +6,8 @@
         <el-input v-model="query.host" placeholder="节点地址" class="handle-input mr10"></el-input>
 
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        <span class="handle-spacer"></span>
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
@@ -20,9 +21,9 @@
         <el-table-column prop="password" label="密码" align="center"></el-table-column>
         <el-table-column prop="status" label="状态" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 0" class="disabled">禁用中</el-tag>
-            <el-tag v-if="scope.row.status === 1" class="enabled">启用中</el-tag>
-            <el-tag v-if="scope.row.status === 2" class="failed">启动失败</el-tag>
+            <span v-if="scope.row.status === 0" class="state-pill sp-idle"><span class="sp-dot"></span>禁用中</span>
+            <span v-if="scope.row.status === 1" class="state-pill sp-success"><span class="sp-dot"></span>启用中</span>
+            <span v-if="scope.row.status === 2" class="state-pill sp-error"><span class="sp-dot"></span>启动失败</span>
           </template>
         </el-table-column>
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>

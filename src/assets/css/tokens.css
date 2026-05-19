@@ -1,31 +1,45 @@
 /* ============================================
-   Mysterious Design Token System
-   分布式压测平台 — Data-Dense Dashboard
+   Mysterious Design Token System v3
+   分布式压测平台 — Refined Engineering Aesthetics
    ============================================ */
 
 /* === Light Mode (default) === */
 :root {
-  /* Brand Colors */
+  /* Brand Color Scale */
+  --color-brand-50:  #EFF6FF;
+  --color-brand-100: #DBEAFE;
+  --color-brand-200: #BFDBFE;
+  --color-brand-300: #93C5FD;
+  --color-brand-400: #60A5FA;
+  --color-brand-500: #3B82F6;
+  --color-brand-600: #2563EB;
+  --color-brand-700: #1E40AF;
+  --color-brand-800: #1E3A8A;
+  --color-brand-900: #1E1B4B;
+  --color-brand-950: #0B1226;
+
   --color-primary: #1E40AF;
   --color-primary-hover: #1E3A8A;
   --color-primary-light: #DBEAFE;
   --color-secondary: #3B82F6;
 
   /* Surface Colors */
-  --color-bg: #F0F2F5;
+  --color-bg: #F4F6FB;
+  --color-bg-2: #EDF1F8;
   --color-bg-card: #FFFFFF;
-  --color-bg-muted: #E9EEF6;
+  --color-bg-muted: #EFF2F7;
   --color-bg-elevated: #FFFFFF;
+  --color-bg-subtle: #F8FAFD;
 
   /* Text Colors */
-  --color-fg: #1E293B;
-  --color-fg-secondary: #64748B;
+  --color-fg: #0F172A;
+  --color-fg-secondary: #475569;
   --color-fg-tertiary: #94A3B8;
   --color-fg-inverse: #FFFFFF;
 
   /* Border */
   --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
+  --color-border-light: #EFF2F7;
 
   /* Status Colors - WCAG AA compliant */
   --color-success: #16A34A;
@@ -38,16 +52,19 @@
   --color-info-bg: #DBEAFE;
   --color-disabled: #9CA3AF;
   --color-disabled-bg: #F3F4F6;
+  --color-violet: #7C3AED;
+  --color-amber: #F59E0B;
 
   /* Sidebar */
-  --color-sidebar-bg: #1E293B;
+  --color-sidebar-bg: #0B1226;
+  --color-sidebar-bg-2: #0F1B36;
   --color-sidebar-fg: #CBD5E1;
-  --color-sidebar-hover: #334155;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.04);
   --color-sidebar-active: #3B82F6;
 
   /* Header */
-  --color-header-bg: #FFFFFF;
-  --color-header-fg: #1E293B;
+  --color-header-bg: rgba(255, 255, 255, 0.78);
+  --color-header-fg: #0F172A;
   --color-header-border: #E2E8F0;
 
   /* Tags Bar */
@@ -70,7 +87,7 @@
   --text-xl: 20px;
   --text-2xl: 24px;
   --text-3xl: 30px;
-  --text-kpi: 32px;
+  --text-kpi: 28px;
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --leading-relaxed: 1.75;
@@ -89,16 +106,32 @@
   /* ======== Border Radius ======== */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
   --radius-full: 9999px;
 
   /* ======== Shadows ======== */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -8px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 2px 4px rgba(15, 23, 42, 0.04), 0 24px 48px -16px rgba(15, 23, 42, 0.14);
+  --shadow-xl: 0 4px 12px rgba(15, 23, 42, 0.08), 0 40px 80px -20px rgba(15, 23, 42, 0.16);
+  --shadow-inner-light: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+
+  /* ======== Gradients ======== */
+  --gradient-primary: linear-gradient(180deg, #2563EB 0%, #1E40AF 100%);
+  --gradient-brand: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  --gradient-sidebar: linear-gradient(180deg, #0F1B36 0%, #0B1226 100%);
+  --gradient-amber: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
+  --gradient-success: linear-gradient(180deg, #22C55E 0%, #16A34A 100%);
+  --gradient-violet: linear-gradient(135deg, #A78BFA, #7C3AED);
+  --gradient-line: linear-gradient(90deg, transparent, var(--color-brand-400), transparent);
+
+  /* ======== Ring (focus halo) ======== */
+  --ring-brand: 0 0 0 3px rgba(59, 130, 246, 0.16);
+  --ring-error: 0 0 0 3px rgba(220, 38, 38, 0.16);
+  --ring-success: 0 0 0 3px rgba(22, 163, 74, 0.16);
 
   /* ======== Z-Index Scale ======== */
   --z-sidebar: 40;
@@ -127,9 +160,11 @@
   --color-secondary: #818CF8;
 
   --color-bg: #0F172A;
+  --color-bg-2: #0B1226;
   --color-bg-card: #1E293B;
   --color-bg-muted: #1E293B;
   --color-bg-elevated: #334155;
+  --color-bg-subtle: #1A2238;
 
   --color-fg: #F1F5F9;
   --color-fg-secondary: #94A3B8;
@@ -150,12 +185,13 @@
   --color-disabled: #4B5563;
   --color-disabled-bg: #374151;
 
-  --color-sidebar-bg: #0B1121;
+  --color-sidebar-bg: #060B19;
+  --color-sidebar-bg-2: #0B1226;
   --color-sidebar-fg: #CBD5E1;
-  --color-sidebar-hover: #1E293B;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.05);
   --color-sidebar-active: #60A5FA;
 
-  --color-header-bg: #1E293B;
+  --color-header-bg: rgba(30, 41, 59, 0.85);
   --color-header-fg: #F1F5F9;
   --color-header-border: #334155;
 
@@ -243,4 +279,24 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-fg-secondary);
+}
+
+/* ============================================
+   Global Keyframes (shared across components)
+   ============================================ */
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(245, 158, 11, 0.04); }
+}
+@keyframes pulse-brand {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(59, 130, 246, 0.04); }
+}
+@keyframes pulse-error {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(220, 38, 38, 0.04); }
+}
+@keyframes pulse-success {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18); }
+  50% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0.04); }
 }

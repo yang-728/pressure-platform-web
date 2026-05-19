@@ -114,7 +114,7 @@
         <el-input v-model="query.configKey" placeholder="配置字段" class="handle-input mr10"></el-input>
 
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增</el-button>
       </div>
 
@@ -128,7 +128,7 @@
         <el-table-column prop="modifier" label="修改人" align="center"></el-table-column>
         <el-table-column prop="modifyTime" label="修改时间" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="140" align="right">
+        <el-table-column label="操作" width="170" align="right">
           <template #default="scope">
             <div class="action-group">
               <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>

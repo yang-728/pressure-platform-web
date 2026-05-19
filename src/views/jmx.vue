@@ -6,7 +6,7 @@
         <el-input v-model="query.testCaseId" placeholder="用例" class="handle-input mr10"></el-input>
 
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button type="primary" :icon="Refresh" @click="handleReset">重置</el-button>
+        <el-button :icon="Refresh" @click="handleReset">重置</el-button>
       </div>
 
       <el-table :data="jmxData" stripe class="table" ref="multipleTable" v-loading="loading">
@@ -25,7 +25,7 @@
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="140" align="right">
+        <el-table-column label="操作" width="170" align="right">
           <template #default="scope">
             <div class="action-group">
               <el-button text :icon="Search" type="primary" @click="drawer = true,handleJmxView(scope.row.id)" v-permiss="1">预览</el-button>

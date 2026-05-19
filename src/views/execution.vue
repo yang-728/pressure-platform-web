@@ -27,31 +27,31 @@
       </el-table-column>
       <el-table-column prop="region" label="区域" align="center" width="90">
         <template #default="{ row }">
-          <el-tag v-if="row.region" size="small" type="info">{{ row.region }}</el-tag>
+          <code v-if="row.region" class="region-mono">{{ row.region }}</code>
           <span v-else style="color:var(--color-fg-tertiary);font-size:12px">全部</span>
         </template>
       </el-table-column>
       <el-table-column prop="rowType" label="类型" align="center" width="100">
         <template #default="{ row }">
           <template v-if="row.rowType === 'report'">
-            <el-tag v-if="row.execType === 1" size="small" type="warning" effect="dark">调试</el-tag>
-            <el-tag v-else size="small" effect="dark">执行</el-tag>
+            <span v-if="row.execType === 1" class="state-pill sp-debug">调试</span>
+            <span v-else class="state-pill sp-load">执行</span>
           </template>
           <template v-else>
-            <el-tag v-if="row.scheduleType === 'once'" size="small" type="success" effect="plain">仅一次</el-tag>
-            <el-tag v-else-if="row.scheduleType === 'daily'" size="small" effect="plain">每日</el-tag>
-            <el-tag v-else-if="row.scheduleType === 'weekly'" size="small" type="warning" effect="plain">每周</el-tag>
-            <el-tag v-else size="small" type="info" effect="plain">每月</el-tag>
+            <span v-if="row.scheduleType === 'once'" class="state-pill sp-success">仅一次</span>
+            <span v-else-if="row.scheduleType === 'daily'" class="state-pill sp-waiting">每日</span>
+            <span v-else-if="row.scheduleType === 'weekly'" class="state-pill sp-load">每周</span>
+            <span v-else class="state-pill sp-idle">每月</span>
           </template>
         </template>
       </el-table-column>
-      <el-table-column prop="status" label="状态" align="center" width="100">
+      <el-table-column prop="status" label="状态" align="center" width="110">
         <template #default="{ row }">
           <template v-if="row.rowType === 'report'">
-            <span class="inline-dot running"></span>运行中
+            <span class="state-pill sp-running"><span class="sp-dot"></span>运行中</span>
           </template>
           <template v-else>
-            <span style="color:var(--color-fg-tertiary);font-size:12px">等待中</span>
+            <span class="state-pill sp-waiting"><span class="sp-dot"></span>等待中</span>
           </template>
         </template>
       </el-table-column>
@@ -486,16 +486,21 @@ watch(chartDialogVisible, (visible) => {
   font-size: 12px;
   color: var(--color-fg-tertiary);
 }
-.inline-dot {
-  display: inline-block;
-  width: 7px; height: 7px;
+.auto-refresh::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--color-amber);
   border-radius: 50%;
-  margin-right: 4px;
-  vertical-align: middle;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  animation: pulse-amber 1.6s infinite;
 }
-.inline-dot.running {
-  background: var(--color-warning);
-  animation: live-pulse 1.5s infinite;
+.region-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-fg-secondary);
+  background: var(--color-bg-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
 }
 .form-hint {
   margin-left: 8px;

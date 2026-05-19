@@ -93,6 +93,15 @@ const routes: RouteRecordRaw[] = [
                 },
                 component: () => import('../views/user.vue'),
             },
+            {
+                path: '/profile',
+                name: 'Profile',
+                meta: {
+                    title: '个人中心',
+                    permiss: '1',
+                },
+                component: () => import('../views/profile.vue'),
+            },
         ],
     },
     {
@@ -128,6 +137,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/design-preview.vue'),
     },
     {
+        path: '/design-preview-v2',
+        name: 'DesignPreviewV2',
+        meta: { title: '设计稿预览 v2' },
+        component: () => import('../views/design-preview-v2.vue'),
+    },
+    {
         path: '/403',
         name: '403',
         meta: {
@@ -146,7 +161,7 @@ router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} | mysterious`;
     const role = localStorage.getItem('ms_username');
     const permiss = usePermissStore();
-    if (!role && to.path !== '/login' && to.path !== '/design-preview' && to.path !== '/login-redesign' && to.path !== '/home-redesign' && to.path !== '/execution-redesign') {
+    if (!role && to.path !== '/login' && to.path !== '/design-preview' && to.path !== '/design-preview-v2' && to.path !== '/login-redesign' && to.path !== '/home-redesign' && to.path !== '/execution-redesign') {
         next('/login');
     } else if (to.meta.permiss && !permiss.key.includes(to.meta.permiss)) {
         // 如果没有权限，则进入403
