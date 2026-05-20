@@ -117,6 +117,10 @@
               <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
             </div>
             <div class="action-group">
+              <el-button text :icon="Plus" type="primary" @click="goReports(scope.row.id, scope.row.name)" v-permiss="1">报告</el-button>
+              <el-button text :icon="Timer" type="primary" @click="openHistoryDrawer(scope.row.id, scope.row.name)" v-permiss="1">历史</el-button>
+            </div>
+            <div class="action-group">
               <el-dropdown trigger="click">
                 <el-button text :icon="Right" type="primary" v-permiss="1">执行</el-button>
                 <template #dropdown>
@@ -136,9 +140,6 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-              <el-button text :icon="Plus" type="primary" @click="goReports(scope.row.id, scope.row.name)" v-permiss="1">报告</el-button>
-            </div>
-            <div class="action-group">
               <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
             </div>
           </template>
@@ -1216,13 +1217,52 @@
     </el-drawer>
 
   </div>
+
+    <!-- 历史报告抽屉 -->
+    <el-drawer v-model="historyDrawerVisible" :title="historyDrawerTitle" :size="'50%'" destroy-on-close>
+      <el-table :data="historyReports" stripe size="small" v-loading="historyLoading">
+        <el-table-column prop="id" label="编号" width="80" align="center"></el-table-column>
+        <el-table-column prop="name" label="名称" align="center"></el-table-column>
+        <el-table-column prop="execType" label="类型" align="center" width="90">
+          <template #default="scope">
+            <span v-if="scope.row.execType === 1" class="state-pill sp-debug">调试</span>
+            <span v-else class="state-pill sp-load">执行</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" align="center" width="100">
+          <template #default="scope">
+            <span v-if="scope.row.status === 0" class="state-pill sp-idle">未开始</span>
+            <span v-if="scope.row.status === 1" class="state-pill sp-running"><span class="sp-dot"></span>运行中</span>
+            <span v-if="scope.row.status === 2" class="state-pill sp-success">成功</span>
+            <span v-if="scope.row.status === 3" class="state-pill sp-error">异常</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="执行时间" align="center" min-width="160"></el-table-column>
+        <el-table-column label="操作" width="120" align="center">
+          <template #default="scope">
+            <el-button text type="primary" size="small" :icon="TrendCharts" @click="openHistoryChart(scope.row.id)">曲线</el-button>
+          </template>
+        </el-table-column>
+        <template #empty><el-empty description="暂无历史报告" /></template>
+      </el-table>
+      <div class="pagination" style="margin-top:16px">
+        <el-pagination background layout="total, prev, pager, next"
+          :current-page="historyQuery.page" :page-size="historyQuery.size" :total="historyTotal"
+          @current-change="handleHistoryPageChange" size="small" />
+      </div>
+    </el-drawer>
+
+    <!-- 历史曲线对话框 -->
+    <el-dialog title="历史曲线" v-model="historyChartVisible" width="900px" destroy-on-close>
+      <JmeterMetricsChart :data="historyMetricsData" />
+    </el-dialog>
 </template>
 
 <script setup lang="ts" name="baseTestCase">
-import {ref, reactive, onUnmounted, onMounted, computed, watch} from 'vue';
+import {ref, reactive, onUnmounted, onMounted, onActivated, computed, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import VirtualTextViewer from '../components/VirtualTextViewer.vue';
-import { Plus, Search, Delete, Edit, Refresh, Right, Upload, VideoPlay, Timer, Select, Document } from '@element-plus/icons-vue';
+import { Plus, Search, Delete, Edit, Refresh, Right, Upload, VideoPlay, Timer, Select, Document, TrendCharts } from '@element-plus/icons-vue';
 import {
   addTestCase, debugTestCase,
   deleteTestCase, getFull,
@@ -1238,7 +1278,8 @@ import {deleteCsv, viewCsv, uploadCsv, downloadCsv} from "../api/csv";
 import {addOnlineJmx, deleteJmx, viewJmx, getOnlineJmx, updateOnlineJmx, uploadJmx, downloadJmx} from "../api/jmx";
 import {deleteJar, downloadJar, uploadJar} from "../api/jar";
 import {getEnableSlaveCount, getRegions} from "../api/node";
-import {getReportList} from "../api/report";
+import {getReportList, getReportListByTestCase, getMetrics} from "../api/report";
+import JmeterMetricsChart from '../components/JmeterMetricsChart.vue';
 import router from "../router";
 import {checkToLogin} from "../common/push";
 import {useRoute} from "vue-router";
@@ -1925,6 +1966,62 @@ const goReports = (testCaseId, name) => {
     }
   });
 }
+
+// 历史报告
+const historyDrawerVisible = ref(false);
+const historyDrawerTitle = ref('执行历史');
+const historyReports = ref<any[]>([]);
+const historyLoading = ref(false);
+const historyTotal = ref(0);
+const historyQuery = reactive({ page: 1, size: 10 });
+const currentHistoryTestCaseId = ref(0);
+
+const loadHistoryReports = async () => {
+  if (!currentHistoryTestCaseId.value) return;
+  historyLoading.value = true;
+  try {
+    const res = await getReportListByTestCase({
+      testCaseId: currentHistoryTestCaseId.value,
+      page: historyQuery.page,
+      size: historyQuery.size
+    });
+    if (res.data.code === 0) {
+      historyReports.value = res.data.data.list || [];
+      historyTotal.value = res.data.data.total || 0;
+    }
+  } catch { /* ignore */ }
+  historyLoading.value = false;
+};
+
+const openHistoryDrawer = (testCaseId: number, name: string) => {
+  currentHistoryTestCaseId.value = testCaseId;
+  historyDrawerTitle.value = `执行历史 - ${name}`;
+  historyQuery.page = 1;
+  historyDrawerVisible.value = true;
+  loadHistoryReports();
+};
+
+const handleHistoryPageChange = (val: number) => {
+  historyQuery.page = val;
+  loadHistoryReports();
+};
+
+// 历史曲线
+const historyChartVisible = ref(false);
+const historyMetricsData = ref<any[]>([]);
+
+const openHistoryChart = async (reportId: number) => {
+  const res = await getMetrics(reportId, 5);
+  if (res.data.code === 0) {
+    historyMetricsData.value = res.data.data || [];
+    historyChartVisible.value = true;
+  }
+};
+
+onActivated(() => {
+  getList();
+  loadReportStats();
+});
 
 
 interface ThreadGroupVO {
@@ -2894,9 +2991,6 @@ const handleSave = async () => {
 const handleCheckboxChange = (field: string, value: boolean) => {
   onlineJmxItem.value.threadGroupVO[field] = value;
 };
-
-
-
 </script>
 
 <style scoped>
@@ -2934,5 +3028,27 @@ const handleCheckboxChange = (field: string, value: boolean) => {
 .error-message {
   color: red;
   font-size: 12px;
+}
+
+/* 操作列按钮对齐 —— 三行每行两个，等宽对齐 */
+.action-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.action-group:last-child {
+  margin-bottom: 0;
+}
+.action-group :deep(.el-button) {
+  justify-content: center;
+  padding: 4px 0 !important;
+  font-size: 13px;
+  height: 28px;
+  width: 100% !important;
+  margin: 0 !important;
+}
+.action-group .el-dropdown {
+  width: 100%;
 }
 </style>

@@ -110,6 +110,30 @@
         </el-row>
       </el-card>
 
+      <!-- 系统配置 -->
+      <el-card shadow="hover" style="margin-bottom: 20px;">
+        <template #header>
+          <div style="font-weight: bold;">系统配置</div>
+        </template>
+
+        <el-form label-width="140px" style="max-width: 480px;">
+          <el-form-item label="报告保留天数">
+            <el-input-number
+              v-model="reportRetentionDays"
+              :min="0"
+              :max="3650"
+              :step="1"
+              step-strictly
+              style="width: 160px;"
+            />
+            <span style="margin-left: 12px; color: #909399; font-size: 13px;">0 表示永久保存</span>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="saveRetentionConfig">保存</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+
       <div class="handle-box">
         <el-input v-model="query.configKey" placeholder="配置字段" class="handle-input mr10"></el-input>
 
@@ -226,6 +250,51 @@ const query = reactive({
 const loading = ref(false);
 const configData = ref<ConfigItem[]>([]);
 const total = ref(0);
+
+// 报告保留天数配置
+const reportRetentionDays = ref(0);
+const retentionConfigId = ref<number | null>(null);
+
+const loadRetentionConfig = async () => {
+  const res = await getConfigList({ configKey: 'REPORT_RETENTION_DAYS', page: 1, size: 1 });
+  if (res.data.code === 0 && res.data.data.list.length > 0) {
+    const item = res.data.data.list[0];
+    retentionConfigId.value = item.id;
+    const val = parseInt(item.configValue, 10);
+    reportRetentionDays.value = isNaN(val) ? 0 : Math.max(0, Math.min(3650, val));
+  } else {
+    retentionConfigId.value = null;
+    reportRetentionDays.value = 0;
+  }
+};
+
+const saveRetentionConfig = async () => {
+  const val = Math.max(0, Math.min(3650, reportRetentionDays.value));
+  reportRetentionDays.value = val;
+  if (retentionConfigId.value) {
+    const res = await updateConfig(retentionConfigId.value, {
+      configKey: 'REPORT_RETENTION_DAYS',
+      configValue: String(val),
+      description: '测试报告保留天数，0表示永久保存'
+    });
+    if (res.data.code !== 0) {
+      ElMessage.error(res.data.message);
+      return;
+    }
+  } else {
+    const res = await addConfig({
+      configKey: 'REPORT_RETENTION_DAYS',
+      configValue: String(val),
+      description: '测试报告保留天数，0表示永久保存'
+    });
+    if (res.data.code !== 0) {
+      ElMessage.error(res.data.message);
+      return;
+    }
+    retentionConfigId.value = res.data.data;
+  }
+  ElMessage.success('保存成功');
+};
 const getList = () => {
   loading.value = true;
   getConfigList(query).then(res => {
@@ -240,6 +309,7 @@ const getList = () => {
   }).finally(() => { loading.value = false; });
 };
 getList();
+loadRetentionConfig();
 
 // ========== 业务选项管理 ==========
 const optionConfigIds = reactive({ biz: null, service: null, version: null, region: null });

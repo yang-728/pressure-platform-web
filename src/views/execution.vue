@@ -7,7 +7,7 @@
       <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
       <el-button :icon="Refresh" @click="handleReset">重置</el-button>
       <span class="auto-refresh">
-        <span class="live-dot running"></span>每 15s 自动刷新
+        <span class="live-dot running"></span>每 5s 自动刷新
       </span>
     </div>
 
@@ -149,19 +149,18 @@
     </el-dialog>
 
     <!-- Chart Dialog -->
-    <el-dialog title="实时数据" v-model="chartDialogVisible" width="820px" destroy-on-close>
-      <schart class="bar-schart" canvasId="throughputChart" :options="throughputChart" />
-      <schart class="bar-schart" canvasId="responseTimeChart" :options="responseTimeChart" />
+    <el-dialog title="实时监控" v-model="chartDialogVisible" width="900px" destroy-on-close>
+      <JmeterMetricsChart :data="metricsData" />
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts" name="execution">
-import Schart from 'vue-schart';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Refresh, Close, TrendCharts, VideoPlay, Edit, Delete } from '@element-plus/icons-vue';
-import { getReportListAll, getJMeterResultByReport } from '../api/report';
+import { getReportListAll, getMetrics } from '../api/report';
+import JmeterMetricsChart from '../components/JmeterMetricsChart.vue';
 import { stopExecution } from '../api/testcase';
 import { getTestCaseList } from '../api/testcase';
 import { listScheduledTasks, triggerScheduledTask, updateScheduledTask, deleteScheduledTask } from '../api/scheduledTask';
@@ -266,7 +265,7 @@ const getList = async () => {
 onMounted(async () => {
   await loadTestcaseNames();
   getList();
-  refreshTimer = setInterval(getList, 15000);
+  refreshTimer = setInterval(getList, 5000);
 });
 
 onUnmounted(() => {
@@ -426,47 +425,29 @@ const chartDialogVisible = ref(false);
 const currentReportId = ref(0);
 let chartTimer: ReturnType<typeof setInterval> | null = null;
 
-const throughputChart = reactive({
-  type: 'line' as const,
-  title: { text: '吞吐量' },
-  bgColor: '#ffffff',
-  labels: [] as string[],
-  xRorate: 45,
-  datasets: [{ label: '单位：/s', data: [] as (string | number)[] }]
-});
+interface MetricsItem {
+  timestamp: string;
+  qps: number;
+  avgRt: number;
+  p99Rt: number;
+  errorRate: number;
+  threads: number;
+}
 
-const responseTimeChart = reactive({
-  type: 'line' as const,
-  title: { text: '响应时间' },
-  bgColor: '#ffffff',
-  labels: [] as string[],
-  xRorate: 45,
-  datasets: [{ label: '单位：ms', data: [] as (string | number)[] }]
-});
+const metricsData = ref<MetricsItem[]>([]);
 
 const fetchChartData = async () => {
   if (!currentReportId.value) return;
-  const res = await getJMeterResultByReport(currentReportId.value);
+  const res = await getMetrics(currentReportId.value, 5);
   if (res.data.code !== 0) return;
-  const resultData = res.data.data;
-  if (resultData.length === 0) {
-    throughputChart.labels = [];
-    throughputChart.datasets[0].data = ['0'];
-    responseTimeChart.labels = [];
-    responseTimeChart.datasets[0].data = ['0'];
-    return;
-  }
-  throughputChart.labels = resultData.map((item: any) => item.currentTime);
-  throughputChart.datasets[0].data = resultData.map((item: any) => item.throughput);
-  responseTimeChart.labels = resultData.map((item: any) => item.currentTime);
-  responseTimeChart.datasets[0].data = resultData.map((item: any) => item.avgResponseTime);
+  metricsData.value = res.data.data || [];
 };
 
 const openChartDialog = async (reportId: number) => {
   currentReportId.value = reportId;
   chartDialogVisible.value = true;
   await fetchChartData();
-  chartTimer = setInterval(fetchChartData, 15000);
+  chartTimer = setInterval(fetchChartData, 5000);
 };
 
 watch(chartDialogVisible, (visible) => {
@@ -506,10 +487,5 @@ watch(chartDialogVisible, (visible) => {
   margin-left: 8px;
   font-size: 12px;
   color: var(--color-fg-tertiary);
-}
-.bar-schart {
-  width: 100%;
-  height: 30vh;
-  margin-bottom: 20px;
 }
 </style>

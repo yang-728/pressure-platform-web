@@ -84,3 +84,12 @@ export const getOnlineJmx = (id: number) => {
         method: 'get'
     });
 }
+
+export const updateJmxContent = (id: number, content: string) => {
+    return request({
+        url: '/jmx/updateContent/' + id,
+        method: 'post',
+        data: content,
+        headers: { 'Content-Type': 'text/plain' }
+    });
+}

@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
         children: [
             {
                 path: '/config',
-                name: 'Config',
+                name: 'baseConfig',
                 meta: {
                     title: '配置管理',
                     permiss: '1',
@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/testcase',
-                name: 'Testcase',
+                name: 'baseTestCase',
                 meta: {
                     title: '用例管理',
                     permiss: '1',
@@ -32,7 +32,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/jmx',
-                name: 'Jmx',
+                name: 'baseJmx',
                 meta: {
                     title: '脚本管理',
                     permiss: '1',
@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/csv',
-                name: 'Csv',
+                name: 'baseCsv',
                 meta: {
                     title: '文件管理',
                     permiss: '1',
@@ -50,7 +50,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/jar',
-                name: 'Jar',
+                name: 'baseJar',
                 meta: {
                     title: '依赖管理',
                     permiss: '1',
@@ -59,7 +59,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/execution',
-                name: 'Execution',
+                name: 'execution',
                 meta: {
                     title: '执行队列',
                     permiss: '1',
@@ -68,7 +68,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/report',
-                name: 'Report',
+                name: 'baseReport',
                 meta: {
                     title: '执行结果',
                     permiss: '1',
@@ -77,7 +77,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/node',
-                name: 'Node',
+                name: 'baseNode',
                 meta: {
                     title: '节点管理',
                     permiss: '1',
@@ -86,7 +86,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: '/user',
-                name: 'User',
+                name: 'baseUser',
                 meta: {
                     title: '用户管理',
                     permiss: '11',

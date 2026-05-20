@@ -34,6 +34,15 @@ export const viewCsv = (id: number) => {
     });
 }
 
+export const updateCsv = (id: number, content: string) => {
+    return request({
+        url: '/csv/update/' + id,
+        method: 'post',
+        data: content,
+        headers: { 'Content-Type': 'text/plain' }
+    });
+}
+
 export const downloadCsv = async (id: number, csvName: string) => {
     try {
         const response: AxiosResponse<Blob> = await request({

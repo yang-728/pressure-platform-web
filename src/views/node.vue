@@ -414,4 +414,25 @@ function sleep(ms: number): Promise<void> {
 </script>
 
 <style scoped>
+/* 操作列按钮对齐 —— 两行每行两个，等宽对齐 */
+.action-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.action-group:last-child {
+  margin-bottom: 0;
+}
+.action-group :deep(.el-button) {
+  justify-content: center;
+  padding: 4px 0 !important;
+  font-size: 13px;
+  height: 28px;
+  width: 100% !important;
+  margin: 0 !important;
+}
+.action-group .el-dropdown {
+  width: 100%;
+}
 </style>

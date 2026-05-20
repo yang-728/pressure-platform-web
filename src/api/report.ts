@@ -17,10 +17,26 @@ export const getReportListAll = (param: any) => {
     });
 }
 
+export const getReportListByTestCase = (param: any) => {
+    return request({
+        url: '/report/listByTestCase',
+        method: 'get',
+        params: param
+    });
+}
+
 export const getJMeterResultByReport = (reportId: number) => {
     return request({
         url: '/report/getJMeterResult/' + reportId,
         method: 'get'
+    });
+}
+
+export const getMetrics = (reportId: number, window: number = 5) => {
+    return request({
+        url: '/report/getMetrics/' + reportId,
+        method: 'get',
+        params: { window }
     });
 }
 

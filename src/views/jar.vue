@@ -47,7 +47,7 @@
   </div>
 </template>
 
-<script setup lang="ts" name="baseJmx">
+<script setup lang="ts" name="baseJar">
 import {ref, reactive, computed} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import { Plus, Search, Delete, Edit, Refresh, Top } from '@element-plus/icons-vue';

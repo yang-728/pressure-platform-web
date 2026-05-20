@@ -82,7 +82,7 @@
   </div>
 </template>
 
-<script setup lang="ts" name="baseJmx">
+<script setup lang="ts" name="baseReport">
 import {ref, reactive, computed} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import VirtualTextViewer from '../components/VirtualTextViewer.vue';

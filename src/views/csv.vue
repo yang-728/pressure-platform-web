@@ -36,20 +36,32 @@
         <template #empty><el-empty description="暂无数据文件" /></template>
       </el-table>
 
-<!--      &lt;!&ndash;    抽屉展示详情&ndash;&gt;-->
-<!--      <el-drawer v-model="drawer" title="数据详情" :show-close="true" :with-header="true" :size="'60%'">-->
-<!--        <pre><div v-text="csvFile"></div></pre>-->
-<!--      </el-drawer>-->
-      <!--    抽屉展示详情-->
       <el-drawer
           v-model="drawer"
-          title="数据详情"
+          :title="csvEditMode ? '编辑数据' : '数据详情'"
           :show-close="true"
           :with-header="true"
-          :size="'60%'"
+          :size="'80%'"
       >
-        <div class="log-content">
+        <div class="drawer-actions" style="margin-bottom: 12px; text-align: right;" v-if="!csvEditMode">
+          <el-button type="primary" size="small" @click="enterCsvEdit">编辑</el-button>
+        </div>
+        <div class="drawer-actions" style="margin-bottom: 12px; text-align: right;" v-else>
+          <el-button size="small" @click="cancelCsvEdit">取消</el-button>
+          <el-button type="primary" size="small" @click="saveCsvEdit">保存</el-button>
+        </div>
+
+        <div class="log-content" style="height: calc(100% - 50px);" v-if="!csvEditMode">
           <VirtualTextViewer :content="csvFile" />
+        </div>
+
+        <div v-else style="height: calc(100% - 50px);">
+          <el-input
+            v-model="csvTextContent"
+            type="textarea"
+            :rows="35"
+            style="font-family: var(--font-mono, monospace);"
+          />
         </div>
       </el-drawer>
 
@@ -69,16 +81,18 @@
 </template>
 
 <script setup lang="ts" name="baseCsv">
-import {ref, reactive, computed} from 'vue';
+import {ref, reactive} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import VirtualTextViewer from '../components/VirtualTextViewer.vue';
-import { Plus, Search, Delete, Edit, Refresh, Top } from '@element-plus/icons-vue';
-import {deleteCsv, viewCsv, getCsvList, downloadCsv} from "../api/csv";
+import { Search, Delete, Refresh } from '@element-plus/icons-vue';
+import {deleteCsv, viewCsv, getCsvList, downloadCsv, updateCsv} from "../api/csv";
 import {CsvItem} from "../common/item";
-import {viewJmx} from "../api/jmx";
 import {checkToLogin, handleTestCaseClick} from "../common/push";
 
 const drawer = ref(false);
+const csvEditMode = ref(false);
+const csvTextContent = ref('');
+const currentCsvId = ref(0);
 
 const query = reactive({
   srcName: null,
@@ -105,7 +119,6 @@ const getList = () => {
 };
 getList();
 
-// 查询操作
 const handleSearch = () => {
   query.page = 1;
   if (query.srcName === '') query.srcName = null;
@@ -119,13 +132,11 @@ const handleReset = () => {
   getList();
 };
 
-// 分页导航
 const handlePageChange = (val: number) => {
   query.page = val;
   getList();
 };
 
-// 删除操作
 const handleCsvDelete = async (id: number) => {
   await ElMessageBox.confirm('确定要删除吗？', '提示', {
     type: 'warning'
@@ -136,7 +147,7 @@ const handleCsvDelete = async (id: number) => {
     ElMessage.error(res.data.message);
   } else {
     ElMessage.success("删除成功");
-    await getList(); // 等待getList()执行完再继续
+    await getList();
   }
 };
 
@@ -151,11 +162,33 @@ const handleCsvDownload = async (id: number, csvName: string) => {
   }
 }
 
-// 预览操作
 const csvFile = ref('');
 const handleCsvView = async (id: number) => {
+  csvEditMode.value = false;
+  currentCsvId.value = id;
   const res = await viewCsv(id);
   csvFile.value = res.data;
+};
+
+const enterCsvEdit = () => {
+  csvTextContent.value = csvFile.value;
+  csvEditMode.value = true;
+};
+
+const cancelCsvEdit = () => {
+  csvEditMode.value = false;
+};
+
+const saveCsvEdit = async () => {
+  const res = await updateCsv(currentCsvId.value, csvTextContent.value);
+  const code = res.data.code;
+  if (code !== 0) {
+    ElMessage.error(res.data.message || '保存失败');
+  } else {
+    ElMessage.success('保存成功');
+    csvFile.value = csvTextContent.value;
+    csvEditMode.value = false;
+  }
 };
 
 </script>

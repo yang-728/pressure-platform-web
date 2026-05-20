@@ -36,19 +36,30 @@
         <template #empty><el-empty description="暂无脚本数据" /></template>
       </el-table>
 
-      <!--    抽屉展示详情-->
-<!--      <el-drawer v-model="drawer" title="脚本详情" :show-close="true" :with-header="true" :size="'60%'">-->
-<!--        <pre><div v-text="jmxFile"></div></pre>-->
-<!--      </el-drawer>-->
+      <!--    抽屉展示详情 / 源码编辑 -->
       <el-drawer
           v-model="drawer"
-          title="脚本详情"
+          :title="jmxEditMode ? '源码编辑' : '脚本详情'"
           :show-close="true"
           :with-header="true"
           :size="'60%'"
       >
-        <div class="log-content">
-          <VirtualTextViewer :content="jmxFile" />
+        <div class="drawer-actions" style="margin-bottom: 12px; text-align: right;" v-if="!jmxEditMode">
+          <el-button type="primary" size="small" @click="enterJmxEdit">编辑</el-button>
+        </div>
+        <div class="drawer-actions" style="margin-bottom: 12px; text-align: right;" v-else>
+          <el-button size="small" @click="cancelJmxEdit">取消</el-button>
+          <el-button type="primary" size="small" @click="saveJmxEdit">保存</el-button>
+        </div>
+        <div class="log-content" style="height: calc(100% - 50px);">
+          <VirtualTextViewer v-if="!jmxEditMode" :content="jmxFile" />
+          <el-input
+            v-else
+            v-model="jmxEditContent"
+            type="textarea"
+            :rows="30"
+            style="font-family: var(--font-mono, monospace);"
+          />
         </div>
       </el-drawer>
 
@@ -72,12 +83,15 @@ import {ref, reactive, computed} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import VirtualTextViewer from '../components/VirtualTextViewer.vue';
 import { Plus, Search, Delete, Edit, Refresh, Top } from '@element-plus/icons-vue';
-import {deleteJmx, viewJmx, getJmxList, downloadJmx} from "../api/jmx";
+import {deleteJmx, viewJmx, getJmxList, downloadJmx, updateJmxContent} from "../api/jmx";
 import {viewCsv} from "../api/csv";
 import {JmxItem} from "../common/item";
 import {checkToLogin, handleTestCaseClick} from "../common/push";
 
 const drawer = ref(false);
+const jmxEditMode = ref(false);
+const jmxEditContent = ref('');
+const currentJmxId = ref(0);
 
 const query = reactive({
   srcName: null,
@@ -153,8 +167,40 @@ const handleJmxDelete = async (id: number) => {
 // 预览操作
 const jmxFile = ref('');
 const handleJmxView = async (id: number) => {
+  jmxEditMode.value = false;
+  currentJmxId.value = id;
   const res = await viewJmx(id);
   jmxFile.value = res.data;
+};
+
+// 直接打开编辑模式
+const handleJmxEditOpen = async (id: number) => {
+  currentJmxId.value = id;
+  const res = await viewJmx(id);
+  jmxFile.value = res.data;
+  jmxEditContent.value = res.data;
+  jmxEditMode.value = true;
+};
+
+const enterJmxEdit = () => {
+  jmxEditContent.value = jmxFile.value;
+  jmxEditMode.value = true;
+};
+
+const cancelJmxEdit = () => {
+  jmxEditMode.value = false;
+};
+
+const saveJmxEdit = async () => {
+  const res = await updateJmxContent(currentJmxId.value, jmxEditContent.value);
+  const code = res.data.code;
+  if (code !== 0) {
+    ElMessage.error(res.data.message || '保存失败');
+  } else {
+    ElMessage.success('保存成功');
+    jmxFile.value = jmxEditContent.value;
+    jmxEditMode.value = false;
+  }
 };
 
 </script>
