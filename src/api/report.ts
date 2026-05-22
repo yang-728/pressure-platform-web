@@ -96,6 +96,45 @@ export const viewReport = (id: number) => {
     });
 }
 
+export const getGrafanaUrl = (id: number) => {
+    return request({
+        url: '/report/grafana/' + id,
+        method: 'get'
+    });
+}
+
+export const getArtifacts = (id: number) => {
+    return request({
+        url: '/report/artifacts/' + id,
+        method: 'get'
+    });
+}
+
+export const downloadArtifact = async (id: number, name: string) => {
+    try {
+        const response: AxiosResponse<Blob> = await request({
+            url: '/report/artifacts/' + id + '/download',
+            method: 'get',
+            params: { name },
+            responseType: 'blob',
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', name);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error downloading artifact:', error);
+        return { success: false, error };
+    }
+};
+
 export const compareReports = (baseId: number, targetId: number, window: number = 5) => {
     return request({
         url: '/report/compare',

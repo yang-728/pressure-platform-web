@@ -84,7 +84,7 @@
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
         <span style="flex:1"></span>
-        <span class="auto-refresh"><span class="ar-dot"></span>每 10s 自动刷新</span>
+        <span class="auto-refresh"><span class="ar-dot"></span>每 30s 自动刷新</span>
         <el-button type="primary" :icon="Plus" @click="handleInsert">新增用例</el-button>
       </div>
 
@@ -117,7 +117,7 @@
               <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
             </div>
             <div class="action-group">
-              <el-button text :icon="Plus" type="primary" @click="goReports(scope.row.id, scope.row.name)" v-permiss="1">报告</el-button>
+              <el-button text :icon="Plus" type="primary" @click="goReports(scope.row.id)" v-permiss="1">报告</el-button>
               <el-button text :icon="Timer" type="primary" @click="openHistoryDrawer(scope.row.id, scope.row.name)" v-permiss="1">历史</el-button>
             </div>
             <div class="action-group">
@@ -1442,7 +1442,7 @@ let interval: ReturnType<typeof setInterval>;
 onMounted(() => {
   getList(); // 页面加载时获取一次数据
   loadReportStats(); // 加载历史执行结果统计
-  interval = setInterval(() => { getList(); loadReportStats(); }, 10000); // 每10秒刷新一次
+  interval = setInterval(() => { getList(); loadReportStats(); }, 30000); // 每30秒刷新一次
 });
 
 onUnmounted(() => {
@@ -1975,14 +1975,8 @@ const handleCsvView = async (id: number) => {
 //   router.push({path:'/report'})
 // }
 
-const goReports = (testCaseId, name) => {
-  router.push({
-    path: '/report',
-    query: {
-      testCaseId: testCaseId,
-      name: name
-    }
-  });
+const goReports = (testCaseId) => {
+  router.push(`/report?testCaseId=${encodeURIComponent(String(testCaseId))}&refreshAt=${Date.now()}`);
 }
 
 // 历史报告

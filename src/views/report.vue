@@ -37,17 +37,15 @@
         <el-table-column prop="creator" label="创建人" align="center"></el-table-column>
         <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
 
-        <el-table-column label="操作" width="240" align="right">
+        <el-table-column label="操作" width="320" align="right">
           <template #default="scope">
-            <div v-if="scope.row.execType !== 1" class="action-group">
-              <el-button text :icon="Top" type="primary" @click="handleViewReport(scope.row.id)" v-permiss="1">预览</el-button>
-              <el-button text :icon="Download" type="primary" @click="handleDownload(scope.row.id)" v-permiss="1">下载</el-button>
-            </div>
-            <div class="action-group">
+            <div class="report-actions">
+              <el-button v-if="scope.row.execType !== 1" text :icon="Top" type="primary" @click="handleViewReport(scope.row.id)" v-permiss="1">预览</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="Download" type="primary" @click="handleDownload(scope.row.id)" v-permiss="1">下载</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="TrendCharts" type="primary" @click="handleGrafana(scope.row.id)" v-permiss="1">资源</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="Box" type="primary" @click="openArtifacts(scope.row.id)" v-permiss="1">产物</el-button>
               <el-button text :icon="TrendCharts" type="primary" @click="openCompareSelect(scope.row)" v-permiss="1">对比</el-button>
               <el-button text :icon="Search" type="primary" @click="drawer = true,handleJMeterLog(scope.row.id)" v-permiss="1">日志</el-button>
-            </div>
-            <div class="action-group">
               <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
             </div>
           </template>
@@ -110,15 +108,32 @@
         :target-name="compareTargetName"
       />
     </el-dialog>
+
+    <!-- 产物文件对话框 -->
+    <el-dialog title="产物文件" v-model="artifactVisible" width="620px" destroy-on-close>
+      <el-table :data="artifactList" stripe size="small" v-loading="artifactLoading">
+        <el-table-column prop="name" label="文件名" min-width="220" align="center"></el-table-column>
+        <el-table-column label="大小" width="110" align="center">
+          <template #default="scope">{{ formatBytes(scope.row.size) }}</template>
+        </el-table-column>
+        <el-table-column prop="modifyTime" label="更新时间" min-width="160" align="center"></el-table-column>
+        <el-table-column label="操作" width="90" align="center">
+          <template #default="scope">
+            <el-button text type="primary" size="small" :icon="Download" @click="handleDownloadArtifact(scope.row.name)">下载</el-button>
+          </template>
+        </el-table-column>
+        <template #empty><el-empty description="暂无产物文件" /></template>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts" name="baseReport">
-import {ref, reactive, computed} from 'vue';
+import {ref, reactive, computed, onActivated, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import VirtualTextViewer from '../components/VirtualTextViewer.vue';
-import { Download, Search, Delete, Edit, Refresh, Top, TrendCharts } from '@element-plus/icons-vue';
-import {cleanReport, downloadReport, getLog, getReportList, viewReport, compareReports, getReportListByTestCase} from "../api/report";
+import { Download, Search, Delete, Edit, Refresh, Top, TrendCharts, Box } from '@element-plus/icons-vue';
+import {cleanReport, downloadReport, getLog, getReportList, viewReport, compareReports, getReportListByTestCase, getGrafanaUrl, getArtifacts, downloadArtifact} from "../api/report";
 import JmeterCompareChart from '../components/JmeterCompareChart.vue';
 import {checkToLogin, handleTestCaseClick} from "../common/push";
 import {useRoute} from "vue-router";
@@ -140,6 +155,12 @@ interface ReportItem {
   modifyTime: string;
 }
 
+interface ArtifactItem {
+  name: string;
+  size: number;
+  modifyTime: string;
+}
+
 const route = useRoute();
 
 const query = reactive({
@@ -152,6 +173,13 @@ const query = reactive({
 const loading = ref(false);
 const reportData = ref<ReportItem[]>([]);
 const total = ref(0);
+
+const syncQueryFromRoute = () => {
+  query.name = route.query.name || null;
+  query.testCaseId = route.query.testCaseId || null;
+  query.page = 1;
+};
+
 const getList = () => {
   loading.value = true;
   getReportList(query).then(res => {
@@ -166,6 +194,21 @@ const getList = () => {
   }).finally(() => { loading.value = false; });
 };
 getList();
+
+onActivated(() => {
+  syncQueryFromRoute();
+  getList();
+});
+
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.path === '/report') {
+      syncQueryFromRoute();
+      getList();
+    }
+  }
+);
 
 // 查询操作
 const handleSearch = () => {
@@ -221,12 +264,65 @@ const handleViewReport = async (id: number) => {
   }
 }
 
+// 查看资源监控
+const handleGrafana = async (id: number) => {
+  const res = await getGrafanaUrl(id);
+  const code = res.data.code;
+  if (code != 0) {
+    ElMessage.error(res.data.message || '资源监控地址未配置');
+    return;
+  }
+  window.open(res.data.data, '_blank');
+}
+
+// 查看并下载报告产物
+const artifactVisible = ref(false);
+const artifactLoading = ref(false);
+const artifactReportId = ref(0);
+const artifactList = ref<ArtifactItem[]>([]);
+
+const formatBytes = (size: number) => {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+};
+
+const openArtifacts = async (id: number) => {
+  artifactReportId.value = id;
+  artifactVisible.value = true;
+  artifactLoading.value = true;
+  try {
+    const res = await getArtifacts(id);
+    const code = res.data.code;
+    if (code != 0) {
+      ElMessage.error(res.data.message || '产物文件获取失败');
+      artifactList.value = [];
+      return;
+    }
+    artifactList.value = res.data.data || [];
+  } finally {
+    artifactLoading.value = false;
+  }
+};
+
+const handleDownloadArtifact = async (name: string) => {
+  const res = await downloadArtifact(artifactReportId.value, name);
+  if (!res.success) {
+    ElMessage.error('产物下载失败, 请重试');
+  }
+};
+
 // 查看日志
 const jmxLog = ref('');
 const handleJMeterLog = async (id: number) => {
   const res = await getLog(id);
-  console.log("res: ", res);
-  jmxLog.value = res.data;
+  const code = res.data.code;
+  if (code != 0) {
+    ElMessage.error(res.data.message || '日志读取失败');
+    jmxLog.value = '';
+    return;
+  }
+  jmxLog.value = res.data.data || '';
 };
 
 // 对比功能
@@ -274,4 +370,20 @@ const confirmCompare = async (targetId: number) => {
 </script>
 
 <style scoped>
+.report-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 58px);
+  justify-content: end;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 6px;
+}
+
+.report-actions :deep(.el-button) {
+  width: 58px;
+  height: 24px;
+  justify-content: center;
+  margin-left: 0;
+  padding: 0;
+}
 </style>
