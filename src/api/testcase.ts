@@ -24,6 +24,14 @@ export const getTestCaseList = (param: any) => {
     });
 }
 
+export const getTestCaseStats = (param: any) => {
+    return request({
+        url: '/testcase/stats',
+        method: 'get',
+        params: param
+    });
+}
+
 export const getFull = (id: number) => {
     return request({
         url: '/testcase/getFull/' + id,

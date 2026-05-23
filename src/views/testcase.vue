@@ -42,7 +42,7 @@
           <div class="kpi-value-row">
             <span class="kpi-value">{{ stats.successRate }}<small>%</small></span>
           </div>
-          <span class="kpi-delta neutral">历史累计 · {{ stats.success }} 成功 / {{ stats.error }} 失败</span>
+          <span class="kpi-delta neutral">当前筛选 · {{ stats.success }} 成功 / {{ stats.error }} 失败</span>
         </div>
         <div class="kpi-progress"><span :style="{ width: stats.successRate + '%' }"></span></div>
       </div>
@@ -1275,6 +1275,7 @@ import {
   addTestCase, debugTestCase,
   deleteTestCase, getFull,
   getTestCaseList,
+  getTestCaseStats,
   startTestCase,
   stopTestCase,
   updateTestCase
@@ -1286,7 +1287,7 @@ import {deleteCsv, viewCsv, uploadCsv, downloadCsv} from "../api/csv";
 import {addOnlineJmx, deleteJmx, viewJmx, getOnlineJmx, updateOnlineJmx, uploadJmx, downloadJmx} from "../api/jmx";
 import {deleteJar, downloadJar, uploadJar} from "../api/jar";
 import {getEnableSlaveCount, getRegions} from "../api/node";
-import {getReportList, getReportListByTestCase, getMetrics} from "../api/report";
+import {getReportListByTestCase, getMetrics} from "../api/report";
 import JmeterMetricsChart from '../components/JmeterMetricsChart.vue';
 import router from "../router";
 import {checkToLogin} from "../common/push";
@@ -1397,35 +1398,28 @@ const loading = ref(false);
 const testCaseData = ref<TestCaseItem[]>([]);
 const total = ref(0);
 
-// 历史执行结果统计（用于 KPI）
-const reportStats = ref({ success: 0, error: 0, total: 0 });
-const loadReportStats = async () => {
+// 用例状态统计（用于 KPI，按当前搜索条件统计全部匹配用例，不受分页影响）
+const testcaseStats = ref({ total: 0, idle: 0, running: 0, success: 0, failed: 0, waiting: 0, canceled: 0 });
+const loadTestCaseStats = async () => {
   try {
-    const res = await getReportList({ page: 1, size: 9999 });
+    const res = await getTestCaseStats(query);
     if (res.data.code === 0) {
-      const list = res.data.data.list || [];
-      reportStats.value = {
-        success: list.filter((r: any) => r.status == 2).length,
-        error: list.filter((r: any) => r.status == 3).length,
-        total: res.data.data.total || 0
-      };
+      testcaseStats.value = res.data.data || testcaseStats.value;
     }
   } catch { /* ignore */ }
 };
 
 // KPI 统计
 const stats = computed(() => {
-  const list = testCaseData.value || [];
-  const running = list.filter(t => t.status == 1).length;
-  const idle = list.filter(t => t.status == 0).length;
-  const rs = reportStats.value;
-  const executed = rs.success + rs.error;
-  const successRate = executed === 0 ? 100 : Math.round((rs.success / executed) * 1000) / 10;
-  return { running, idle, success: rs.success, error: rs.error, successRate };
+  const ts = testcaseStats.value;
+  const executed = ts.success + ts.failed;
+  const successRate = executed === 0 ? 100 : Math.round((ts.success / executed) * 1000) / 10;
+  return { running: ts.running, idle: ts.idle, success: ts.success, error: ts.failed, successRate };
 });
-const getList = () => {
+const getList = async () => {
   loading.value = true;
-  getTestCaseList(query).then(res => {
+  try {
+    const res = await getTestCaseList(query);
     checkToLogin(res.data.message);
     const code = res.data.code
     if (code != 0) {
@@ -1433,16 +1427,18 @@ const getList = () => {
       return false;
     }
     testCaseData.value = res.data.data.list;
-    total.value = res.data.data.total || 10;
-  }).finally(() => { loading.value = false; });
+    total.value = res.data.data.total ?? 0;
+    await loadTestCaseStats();
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 定时刷新数据
 let interval: ReturnType<typeof setInterval>;
 onMounted(() => {
   getList(); // 页面加载时获取一次数据
-  loadReportStats(); // 加载历史执行结果统计
-  interval = setInterval(() => { getList(); loadReportStats(); }, 30000); // 每30秒刷新一次
+  interval = setInterval(() => { getList(); }, 30000); // 每30秒刷新一次
 });
 
 onUnmounted(() => {
@@ -1900,7 +1896,11 @@ const handleCsvUpload = async (uploadRequestOptions) => {
   const res = await uploadCsv(testCaseId, formData);
   const code = res.data.code
   if (code != 0) {
-    ElMessage.error(res.data.message);
+    if (code === 1015) {
+      ElMessage.warning(res.data.message);
+    } else {
+      ElMessage.error(res.data.message);
+    }
   } else {
     ElMessage.success("上传成功");
     await getFullTestCase(testCaseId);
@@ -2032,7 +2032,6 @@ const openHistoryChart = async (reportId: number) => {
 
 onActivated(() => {
   getList();
-  loadReportStats();
 });
 
 
