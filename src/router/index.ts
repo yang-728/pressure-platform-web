@@ -31,6 +31,15 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/testcase.vue'),
             },
             {
+                path: '/case-generation',
+                name: 'caseGeneration',
+                meta: {
+                    title: '用例生成',
+                    permiss: '1',
+                },
+                component: () => import('../views/caseGeneration.vue'),
+            },
+            {
                 path: '/jmx',
                 name: 'baseJmx',
                 meta: {
