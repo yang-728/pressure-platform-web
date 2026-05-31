@@ -32,6 +32,7 @@ export interface CsvItem {
     dstName: string;
     description: string;
     csvDir: string;
+    distributionStrategy: string;
     testCaseId: number;
     jmeterScriptType: number;
     creator: string;

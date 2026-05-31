@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseConfig',
                 meta: {
                     title: '配置管理',
-                    permiss: '1',
+                    permission: 'config',
                 },
                 component: () => import('../views/config.vue'),
             },
@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseTestCase',
                 meta: {
                     title: '用例管理',
-                    permiss: '1',
+                    permission: 'testcase',
                 },
                 component: () => import('../views/testcase.vue'),
             },
@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'caseGeneration',
                 meta: {
                     title: '用例生成',
-                    permiss: '1',
+                    permission: 'case-generation',
                 },
                 component: () => import('../views/caseGeneration.vue'),
             },
@@ -44,7 +44,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseJmx',
                 meta: {
                     title: '脚本管理',
-                    permiss: '1',
+                    permission: 'jmx',
                 },
                 component: () => import('../views/jmx.vue'),
             },
@@ -53,7 +53,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseCsv',
                 meta: {
                     title: '文件管理',
-                    permiss: '1',
+                    permission: 'csv',
                 },
                 component: () => import('../views/csv.vue'),
             },
@@ -62,7 +62,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseJar',
                 meta: {
                     title: '依赖管理',
-                    permiss: '1',
+                    permission: 'jar',
                 },
                 component: () => import('../views/jar.vue'),
             },
@@ -71,7 +71,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'execution',
                 meta: {
                     title: '执行队列',
-                    permiss: '1',
+                    permission: 'execution',
                 },
                 component: () => import('../views/execution.vue'),
             },
@@ -80,7 +80,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseReport',
                 meta: {
                     title: '执行结果',
-                    permiss: '1',
+                    permission: 'report',
                 },
                 component: () => import('../views/report.vue'),
             },
@@ -89,7 +89,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseNode',
                 meta: {
                     title: '节点管理',
-                    permiss: '1',
+                    permission: 'node',
                 },
                 component: () => import('../views/node.vue'),
             },
@@ -98,16 +98,24 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseUser',
                 meta: {
                     title: '用户管理',
-                    permiss: '11',
+                    permission: 'user',
                 },
                 component: () => import('../views/user.vue'),
+            },
+            {
+                path: '/role',
+                name: 'baseRole',
+                meta: {
+                    title: '角色管理',
+                    permission: 'role',
+                },
+                component: () => import('../views/role.vue'),
             },
             {
                 path: '/profile',
                 name: 'Profile',
                 meta: {
                     title: '个人中心',
-                    permiss: '1',
                 },
                 component: () => import('../views/profile.vue'),
             },
@@ -116,7 +124,7 @@ const routes: RouteRecordRaw[] = [
                 name: 'baseAudit',
                 meta: {
                     title: '审计日志',
-                    permiss: '1',
+                    permission: 'audit',
                 },
                 component: () => import('../views/audit.vue'),
             },
@@ -151,7 +159,7 @@ router.beforeEach((to, from, next) => {
     const permiss = usePermissStore();
     if (!role && to.path !== '/login') {
         next('/login');
-    } else if (to.meta.permiss && !permiss.key.includes(to.meta.permiss)) {
+    } else if (to.meta.permission && !permiss.key.includes(String(to.meta.permission))) {
         // 如果没有权限，则进入403
         next('/403');
     } else {

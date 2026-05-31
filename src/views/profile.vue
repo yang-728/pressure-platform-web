@@ -125,22 +125,27 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { User, Lock } from '@element-plus/icons-vue';
-import { getUserList, updatePassword } from '../api/user';
+import { getCurrentUser, updatePassword } from '../api/user';
+import { usePermissStore } from '../store/permiss';
 
 const router = useRouter();
+const permiss = usePermissStore();
 
 interface UserItem {
   id: number;
   username: string;
   password: string;
   realName: string;
+  roleName: string;
+  roleCode: string;
+  permissions: string[];
   effectTime: string;
   expireTime: string;
 }
 
 const username = localStorage.getItem('ms_username') || '';
 const avatarLetter = computed(() => username.charAt(0).toUpperCase());
-const userRole = computed(() => username === 'admin' ? '系统管理员' : '普通用户');
+const userRole = computed(() => currentUser.value.roleName || localStorage.getItem('ms_role_name') || '-');
 
 const currentUser = ref<Partial<UserItem>>({});
 const loading = ref(false);
@@ -149,9 +154,13 @@ const loadCurrentUser = async () => {
   if (!username) return;
   loading.value = true;
   try {
-    const res = await getUserList({ username, page: 1, size: 1 });
-    if (res.data.code === 0 && res.data.data.list.length > 0) {
-      currentUser.value = res.data.data.list[0];
+    const res = await getCurrentUser();
+    if (res.data.code === 0 && res.data.data) {
+      currentUser.value = res.data.data;
+      const permissions = res.data.data.permissions || [];
+      localStorage.setItem('ms_role_code', res.data.data.roleCode || '');
+      localStorage.setItem('ms_role_name', res.data.data.roleName || '');
+      permiss.handleSet(permissions);
     }
   } catch {
     currentUser.value = { username };

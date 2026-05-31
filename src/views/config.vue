@@ -182,8 +182,8 @@
         <el-table-column label="操作" width="170" align="right">
           <template #default="scope">
             <div class="action-group">
-              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
-              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="'config'">编辑</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="'config'">删除</el-button>
             </div>
           </template>
         </el-table-column>

@@ -108,7 +108,7 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormRules } from 'element-plus';
 import { Lock, User } from '@element-plus/icons-vue';
-import { login } from '../api/user';
+import { getCurrentUser, login } from '../api/user';
 
 interface LoginInfo {
   username: string | null;
@@ -126,10 +126,10 @@ const rules: FormRules = {
 };
 const permiss = usePermissStore();
 
-const userLogin = () => {
+const userLogin = async () => {
   loading.value = true;
-  login(param).then(res => {
-    loading.value = false;
+  try {
+    const res = await login(param);
     const code = res.data.code;
     if (code != 0) {
       ElMessage.error(res.data.message);
@@ -138,12 +138,21 @@ const userLogin = () => {
     const token = res.data.data;
     localStorage.setItem('token', token);
     ElMessage.success('登录成功');
-    localStorage.setItem('ms_username', param.username!);
-    const keys = permiss.defaultList[param.username == 'admin' ? 'admin' : 'demo'];
+    const current = await getCurrentUser();
+    if (current.data.code !== 0) {
+      ElMessage.error(current.data.message);
+      return false;
+    }
+    const user = current.data.data;
+    localStorage.setItem('ms_username', user.username);
+    localStorage.setItem('ms_role_code', user.roleCode || '');
+    localStorage.setItem('ms_role_name', user.roleName || '');
+    const keys = user.permissions || [];
     permiss.handleSet(keys);
-    localStorage.setItem('ms_keys', JSON.stringify(keys));
     router.push('/');
-  }).catch(() => { loading.value = false; });
+  } finally {
+    loading.value = false;
+  }
 };
 
 const tags = useTagsStore();

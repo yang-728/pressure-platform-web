@@ -28,8 +28,8 @@
         <el-table-column label="操作" width="170" align="right">
           <template #default="scope">
             <div class="action-group">
-              <el-button text :icon="Search" type="primary" @click="drawer = true,handleCsvView(scope.row.id)" v-permiss="1">预览</el-button>
-              <el-button text :icon="Delete" type="danger" @click="handleCsvDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text :icon="Search" type="primary" @click="drawer = true,handleCsvView(scope.row.id)" v-permiss="'csv'">预览</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleCsvDelete(scope.row.id)" v-permiss="'csv'">删除</el-button>
             </div>
           </template>
         </el-table-column>

@@ -23,16 +23,16 @@
     <el-table-column label="操作" width="200" align="right">
       <template #default="scope">
         <div class="action-group">
-          <el-button text :icon="Search" type="primary" @click="emit('detail', scope.row.id)" v-permiss="1">详情</el-button>
-          <el-button text :icon="Edit" type="primary" @click="emit('edit', scope.row)" v-permiss="1">编辑</el-button>
+          <el-button text :icon="Search" type="primary" @click="emit('detail', scope.row.id)" v-permiss="'testcase'">详情</el-button>
+          <el-button text :icon="Edit" type="primary" @click="emit('edit', scope.row)" v-permiss="'testcase'">编辑</el-button>
         </div>
         <div class="action-group">
-          <el-button text :icon="Plus" type="primary" @click="emit('reports', scope.row.id)" v-permiss="1">报告</el-button>
-          <el-button text :icon="Timer" type="primary" @click="emit('history', scope.row.id, scope.row.name)" v-permiss="1">历史</el-button>
+          <el-button text :icon="Plus" type="primary" @click="emit('reports', scope.row.id)" v-permiss="'testcase'">报告</el-button>
+          <el-button text :icon="Timer" type="primary" @click="emit('history', scope.row.id, scope.row.name)" v-permiss="'testcase'">历史</el-button>
         </div>
         <div class="action-group">
           <el-dropdown trigger="click">
-            <el-button text :icon="Right" type="primary" v-permiss="1">执行</el-button>
+            <el-button text :icon="Right" type="primary" v-permiss="'testcase'">执行</el-button>
             <template #dropdown>
               <el-dropdown-menu class="horizontal-dropdown-menu">
                 <el-dropdown-item class="dropdown-button" @click="emit('debug', scope.row.id)">
@@ -50,7 +50,7 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-button text :icon="Delete" type="danger" @click="emit('delete', scope.row.id)" v-permiss="1">删除</el-button>
+          <el-button text :icon="Delete" type="danger" @click="emit('delete', scope.row.id)" v-permiss="'testcase'">删除</el-button>
         </div>
       </template>
     </el-table-column>

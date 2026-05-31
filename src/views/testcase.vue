@@ -133,8 +133,8 @@
           <el-table-column prop="testCaseId" label="用例" align="center"></el-table-column>
           <el-table-column label="操作" width="200" align="center">
             <template #default="scope">
-              <el-button text type="primary" icon="el-icon-view" @click="jmxDrawer = true, handleJmxView(scope.row.id)" v-permiss="1">预览</el-button>
-              <el-button text type="danger" icon="el-icon-delete" @click="handleJmxDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text type="primary" icon="el-icon-view" @click="jmxDrawer = true, handleJmxView(scope.row.id)" v-permiss="'testcase'">预览</el-button>
+              <el-button text type="danger" icon="el-icon-delete" @click="handleJmxDelete(scope.row.id)" v-permiss="'testcase'">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -162,11 +162,23 @@
             </template>
           </el-table-column>
           <el-table-column prop="description" label="描述" align="center"></el-table-column>
+          <el-table-column label="分布式策略" width="170" align="center">
+            <template #default="scope">
+              <el-select
+                  size="small"
+                  :model-value="scope.row.distributionStrategy || 'shared'"
+                  @change="(value) => handleCsvStrategyChange(scope.row, value)"
+              >
+                <el-option label="共享文件" value="shared"></el-option>
+                <el-option label="按压力机切片" value="split_by_slave"></el-option>
+              </el-select>
+            </template>
+          </el-table-column>
           <el-table-column prop="testCaseId" label="用例" align="center"></el-table-column>
           <el-table-column label="操作" width="200" align="center">
             <template #default="scope">
-              <el-button text type="primary" icon="el-icon-view" @click="csvDrawer = true, handleCsvView(scope.row.id)" v-permiss="1">预览</el-button>
-              <el-button text type="danger" icon="el-icon-delete" @click="handleCsvDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text type="primary" icon="el-icon-view" @click="csvDrawer = true, handleCsvView(scope.row.id)" v-permiss="'testcase'">预览</el-button>
+              <el-button text type="danger" icon="el-icon-delete" @click="handleCsvDelete(scope.row.id)" v-permiss="'testcase'">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -192,7 +204,7 @@
           <el-table-column prop="testCaseId" label="用例" align="center"></el-table-column>
           <el-table-column label="操作" width="200" align="center">
             <template #default="scope">
-              <el-button text type="danger" icon="el-icon-delete" @click="handleJarDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text type="danger" icon="el-icon-delete" @click="handleJarDelete(scope.row.id)" v-permiss="'testcase'">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -987,6 +999,7 @@ import {
   deleteTestCase, getFull,
   getTestCaseList,
   getTestCaseStats,
+  getRunThreadGroups,
   startTestCase,
   stopTestCase,
   updateTestCase
@@ -994,7 +1007,7 @@ import {
 import {getOptions} from "../api/config";
 import { addScheduledTask } from "../api/scheduledTask";
 import {CsvItem, JarItem, JmxItem} from "../common/item";
-import {deleteCsv, viewCsv, uploadCsv, downloadCsv, updateCsv} from "../api/csv";
+import {deleteCsv, viewCsv, uploadCsv, downloadCsv, updateCsv, updateCsvStrategy} from "../api/csv";
 import {addOnlineJmx, deleteJmx, viewJmx, getOnlineJmx, updateOnlineJmx, uploadJmx, downloadJmx, updateJmxContent} from "../api/jmx";
 import {deleteJar, downloadJar, uploadJar} from "../api/jar";
 import {getEnableSlaveCount, getRegions} from "../api/node";
@@ -1396,7 +1409,8 @@ const runForm = reactive({
   rampTime: '0',
   duration: '60',
   slaveCount: 1,
-  region: ''
+  region: '',
+  threadGroupOverrides: []
 });
 
 const fetchSlaveCount = async () => {
@@ -1430,14 +1444,29 @@ const openRunDialog = async (row: any) => {
   runForm.duration = row.duration || '60';
   runForm.slaveCount = 1;
   runForm.region = '';
+  runForm.threadGroupOverrides = [];
   // 获取区域列表和 slave 数量
   try {
-    const [regionRes, countRes] = await Promise.all([
+    const [regionRes, countRes, threadGroupRes] = await Promise.all([
       getRegions(),
-      getEnableSlaveCount()
+      getEnableSlaveCount(),
+      getRunThreadGroups(row.id)
     ]);
     if (regionRes.data.code === 0) regionList.value = regionRes.data.data;
     if (countRes.data.code === 0) maxSlaveCount.value = countRes.data.data || 0;
+    if (threadGroupRes.data.code === 0) {
+      runForm.threadGroupOverrides = (threadGroupRes.data.data || []).map((item) => ({
+        key: item.key,
+        name: item.name,
+        type: item.type,
+        enabled: item.enabled,
+        originalEnabled: item.enabled,
+        mode: 'global',
+        numThreads: runForm.numThreads,
+        rampTime: runForm.rampTime,
+        duration: runForm.duration
+      }));
+    }
   } catch { /* ignore */ }
   runVisible.value = true;
 };
@@ -1451,7 +1480,18 @@ const confirmRun = async () => {
     rampTime: runForm.rampTime,
     duration: runForm.duration,
     slaveCount: runForm.slaveCount,
-    region: runForm.region
+    region: runForm.region,
+    threadGroupOverrides: runForm.threadGroupOverrides
+      .filter((item) => item.enabled !== item.originalEnabled || (item.mode && item.mode !== 'global'))
+      .map((item) => ({
+        key: item.key,
+        name: item.name,
+        enabled: item.enabled,
+        mode: item.mode,
+        numThreads: item.numThreads,
+        rampTime: item.rampTime,
+        duration: item.duration
+      }))
   });
   const code = res.data.code;
   if (code != 0) {
@@ -1625,6 +1665,24 @@ const handleCsvUpload = async (uploadRequestOptions) => {
   } else {
     ElMessage.success("上传成功");
     await getFullTestCase(testCaseId);
+  }
+}
+
+const handleCsvStrategyChange = async (row: CsvItem, value: string) => {
+  const previous = row.distributionStrategy || 'shared';
+  row.distributionStrategy = value;
+  try {
+    const res = await updateCsvStrategy(row.id, value);
+    const code = res.data.code;
+    if (code != 0) {
+      row.distributionStrategy = previous;
+      ElMessage.error(res.data.message);
+      return;
+    }
+    ElMessage.success("策略已更新");
+  } catch (e) {
+    row.distributionStrategy = previous;
+    ElMessage.error("策略更新失败，请重试");
   }
 }
 

@@ -68,6 +68,13 @@ export const startTestCase = (id: number, body: any) => {
     });
 }
 
+export const getRunThreadGroups = (id: number) => {
+    return request({
+        url: '/testcase/runThreadGroups/' + id,
+        method: 'get'
+    });
+}
+
 export const stopTestCase = (id: number) => {
     return request({
         url: '/testcase/stop/' + id,

@@ -15,10 +15,12 @@
         <el-table-column prop="username" label="用户" align="center"></el-table-column>
         <el-table-column prop="password" label="密码" align="center"></el-table-column>
         <el-table-column prop="realName" label="姓名" align="center"></el-table-column>
+        <el-table-column prop="roleName" label="角色" align="center"></el-table-column>
         <el-table-column prop="effectTime" label="登录时间" align="center"></el-table-column>
-        <el-table-column label="操作" align="right" width="200">
+        <el-table-column label="操作" align="right" width="260">
           <template #default="scope">
             <div class="action-group">
+              <el-button text type="primary" @click="handleEditUser(scope.row)">编辑</el-button>
               <el-button text type="primary" @click="handleUpdatePassword(scope.row)">修改密码</el-button>
               <el-button text type="danger" :disabled="scope.row.username === 'admin'" @click="handleDelete(scope.row.id)">删除</el-button>
             </div>
@@ -53,12 +55,39 @@
         <el-form-item label="姓名">
           <el-input v-model="insertForm.realName"></el-input>
         </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="insertForm.roleId" placeholder="请选择角色" style="width:100%">
+            <el-option v-for="role in roleOptions" :key="role.id" :label="role.name" :value="role.id"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
 				<span class="dialog-footer">
 					<el-button @click="insertVisible = false">取 消</el-button>
 					<el-button type="primary" @click="saveInsert">确 定</el-button>
 				</span>
+      </template>
+    </el-dialog>
+
+    <el-dialog title="编辑用户" v-model="editVisible" width="30%">
+      <el-form label-width="70px">
+        <el-form-item label="用户">
+          <el-input v-model="editForm.username"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-input v-model="editForm.realName"></el-input>
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="editForm.roleId" placeholder="请选择角色" style="width:100%">
+            <el-option v-for="role in roleOptions" :key="role.id" :label="role.name" :value="role.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editVisible = false">取 消</el-button>
+          <el-button type="primary" @click="saveEdit">确 定</el-button>
+        </span>
       </template>
     </el-dialog>
 
@@ -89,7 +118,8 @@ import { useRouter } from 'vue-router';
 import type { FormInstance, FormRules } from 'element-plus';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import { Plus, Search, Delete, Refresh } from '@element-plus/icons-vue';
-import {addUser, deleteUser, getUserList, updatePassword} from "../api/user";
+import {addUser, deleteUser, getUserList, updatePassword, updateUser} from "../api/user";
+import {getRoleList} from "../api/role";
 import {checkToLogin} from "../common/push";
 
 interface UserItem {
@@ -97,6 +127,9 @@ interface UserItem {
   username: string;
   password: string;
   realName: string;
+  roleId: number;
+  roleName: string;
+  roleCode: string;
   effectTime: string;
   expireTime: string;
 }
@@ -114,6 +147,11 @@ const query = reactive({
 const loading = ref(false);
 const userData = ref<UserItem[]>([]);
 const total = ref(0);
+const roleOptions = ref<any[]>([]);
+const loadRoles = async () => {
+  const res = await getRoleList({ page: 1, size: 100 });
+  if (res.data.code === 0) roleOptions.value = res.data.data.list || [];
+};
 const getList = () => {
   loading.value = true;
   getUserList(query).then(res => {
@@ -127,6 +165,7 @@ const getList = () => {
     total.value = res.data.data.total || 10;
   }).finally(() => { loading.value = false; });
 };
+loadRoles();
 getList();
 
 // 查询操作
@@ -155,7 +194,8 @@ const insertFormRef = ref<FormInstance>();
 let insertForm = reactive({
   username: '',
   password: '',
-  realName: ''
+  realName: '',
+  roleId: null as number | null
 });
 
 const insertRules: FormRules = {
@@ -179,6 +219,7 @@ const handleInsert = () => {
   insertForm.username = '';
   insertForm.password = '';
   insertForm.realName = '';
+  insertForm.roleId = roleOptions.value.find(r => r.code === 'user')?.id || roleOptions.value[0]?.id || null;
   insertVisible.value = true;
 };
 
@@ -197,6 +238,37 @@ const saveInsert = async () => {
     insertVisible.value = false;
     await getList(); // 等待getList()执行完再继续
   }
+};
+
+const editVisible = ref(false);
+const editForm = reactive({
+  id: 0,
+  username: '',
+  realName: '',
+  roleId: null as number | null
+});
+
+const handleEditUser = (row: UserItem) => {
+  editForm.id = row.id;
+  editForm.username = row.username;
+  editForm.realName = row.realName;
+  editForm.roleId = row.roleId || null;
+  editVisible.value = true;
+};
+
+const saveEdit = async () => {
+  const res = await updateUser(editForm.id, {
+    username: editForm.username,
+    realName: editForm.realName,
+    roleId: editForm.roleId
+  });
+  if (res.data.code !== 0) {
+    ElMessage.error(res.data.message);
+    return;
+  }
+  ElMessage.success("修改成功");
+  editVisible.value = false;
+  await getList();
 };
 
 // const saveInsert = () => {

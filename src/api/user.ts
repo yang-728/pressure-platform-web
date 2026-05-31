@@ -12,15 +12,31 @@ export const login = (body: {
     })
 }
 
+export const getCurrentUser = () => {
+    return request({
+        url: '/user/current',
+        method: 'get'
+    });
+}
+
 export const addUser = (body: {
     username: string,
-    password: string
+    password: string,
+    roleId?: number
 }) => {
     return request({
         url: '/user/add',
         method: 'post',
         data: body
     })
+}
+
+export const updateUser = (id: number, body: any) => {
+    return request({
+        url: '/user/update/' + id,
+        method: 'post',
+        data: body
+    });
 }
 
 export const getUserList = (param: any) => {

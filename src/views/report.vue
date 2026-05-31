@@ -40,13 +40,13 @@
         <el-table-column label="操作" width="320" align="right">
           <template #default="scope">
             <div class="report-actions">
-              <el-button v-if="scope.row.execType !== 1" text :icon="Top" type="primary" @click="handleViewReport(scope.row.id)" v-permiss="1">预览</el-button>
-              <el-button v-if="scope.row.execType !== 1" text :icon="Download" type="primary" @click="handleDownload(scope.row.id)" v-permiss="1">下载</el-button>
-              <el-button v-if="scope.row.execType !== 1" text :icon="TrendCharts" type="primary" @click="handleGrafana(scope.row.id)" v-permiss="1">资源</el-button>
-              <el-button v-if="scope.row.execType !== 1" text :icon="Box" type="primary" @click="openArtifacts(scope.row.id)" v-permiss="1">产物</el-button>
-              <el-button text :icon="TrendCharts" type="primary" @click="openCompareSelect(scope.row)" v-permiss="1">对比</el-button>
-              <el-button text :icon="Search" type="primary" @click="drawer = true,handleJMeterLog(scope.row.id)" v-permiss="1">日志</el-button>
-              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="Top" type="primary" @click="handleViewReport(scope.row.id)" v-permiss="'report'">预览</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="Download" type="primary" @click="handleDownload(scope.row.id)" v-permiss="'report'">下载</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="TrendCharts" type="primary" @click="handleGrafana(scope.row.id)" v-permiss="'report'">资源</el-button>
+              <el-button v-if="scope.row.execType !== 1" text :icon="Box" type="primary" @click="openArtifacts(scope.row.id)" v-permiss="'report'">产物</el-button>
+              <el-button text :icon="TrendCharts" type="primary" @click="openCompareSelect(scope.row)" v-permiss="'report'">对比</el-button>
+              <el-button text :icon="Search" type="primary" @click="drawer = true,handleJMeterLog(scope.row.id)" v-permiss="'report'">日志</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="'report'">删除</el-button>
             </div>
           </template>
         </el-table-column>

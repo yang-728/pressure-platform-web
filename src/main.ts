@@ -23,6 +23,9 @@ app.directive('permiss', {
             el['hidden'] = true;
         }
     },
+    updated(el, binding) {
+        el['hidden'] = !permiss.key.includes(String(binding.value));
+    },
 });
 
 app.mount('#app');

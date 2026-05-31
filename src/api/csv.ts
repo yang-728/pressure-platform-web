@@ -43,6 +43,14 @@ export const updateCsv = (id: number, content: string) => {
     });
 }
 
+export const updateCsvStrategy = (id: number, distributionStrategy: string) => {
+    return request({
+        url: '/csv/updateStrategy/' + id,
+        method: 'post',
+        data: { distributionStrategy }
+    });
+}
+
 export const downloadCsv = async (id: number, csvName: string) => {
     try {
         const response: AxiosResponse<Blob> = await request({

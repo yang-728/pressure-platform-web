@@ -61,7 +61,7 @@
           <template #default="scope">
             <div class="action-group">
               <el-dropdown trigger="click">
-                <el-button text :icon="Right" type="primary" v-permiss="1">操作</el-button>
+                <el-button text :icon="Right" type="primary" v-permiss="'node'">操作</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item style="background-color:#D1E7DD;color:#4CAF50" @click="enableAction(scope.row.id)">启用</el-dropdown-item>
@@ -69,11 +69,11 @@
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-              <el-button text :icon="Refresh" type="primary" @click="syncAction(scope.row.id)" v-permiss="1">同步</el-button>
+              <el-button text :icon="Refresh" type="primary" @click="syncAction(scope.row.id)" v-permiss="'node'">同步</el-button>
             </div>
             <div class="action-group">
-              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="1">编辑</el-button>
-              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="1">删除</el-button>
+              <el-button text :icon="Edit" type="primary" @click="handleEdit(scope.row)" v-permiss="'node'">编辑</el-button>
+              <el-button text :icon="Delete" type="danger" @click="handleDelete(scope.row.id)" v-permiss="'node'">删除</el-button>
             </div>
           </template>
         </el-table-column>

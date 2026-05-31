@@ -7,8 +7,7 @@ const service:AxiosInstance = axios.create({
 
 service.interceptors.request.use(
     (config: AxiosRequestConfig) => {
-        if (localStorage.getItem('ms_username') &&
-            localStorage.getItem('token')) {
+        if (localStorage.getItem('token')) {
             (config.headers as AxiosRequestHeaders).token = `${localStorage.getItem('token')}`;
         }
         return config;

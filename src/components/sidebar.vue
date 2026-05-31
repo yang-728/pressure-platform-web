@@ -91,23 +91,24 @@ import { Odometer, MagicStick, DocumentCopy, Calendar, Setting, List, TrendChart
 const gradientId = 'sidebar-brand-gradient';
 
 const manageItems = [
-  { icon: Odometer, path: '/testcase', label: '用例管理', permiss: '1' },
-  { icon: MagicStick, path: '/case-generation', label: '用例生成', permiss: '1' },
-  { icon: DocumentCopy, path: '/jmx', label: '脚本管理', permiss: '1' },
-  { icon: Calendar, path: '/csv', label: '数据管理', permiss: '1' },
-  { icon: Setting, path: '/jar', label: '依赖管理', permiss: '1' },
+  { icon: Odometer, path: '/testcase', label: '用例管理', permiss: 'testcase' },
+  { icon: MagicStick, path: '/case-generation', label: '用例生成', permiss: 'case-generation' },
+  { icon: DocumentCopy, path: '/jmx', label: '脚本管理', permiss: 'jmx' },
+  { icon: Calendar, path: '/csv', label: '数据管理', permiss: 'csv' },
+  { icon: Setting, path: '/jar', label: '依赖管理', permiss: 'jar' },
 ];
 
 const executeItems = [
-  { icon: List, path: '/execution', label: '执行队列', permiss: '1' },
-  { icon: TrendCharts, path: '/report', label: '执行结果', permiss: '1' },
+  { icon: List, path: '/execution', label: '执行队列', permiss: 'execution' },
+  { icon: TrendCharts, path: '/report', label: '执行结果', permiss: 'report' },
 ];
 
 const systemItems = [
-  { icon: Monitor, path: '/node', label: '节点管理', permiss: '1' },
-  { icon: Tickets, path: '/config', label: '配置管理', permiss: '1' },
-  { icon: UserFilled, path: '/user', label: '用户管理', permiss: '11' },
-  { icon: Clock, path: '/audit', label: '审计日志', permiss: '1' },
+  { icon: Monitor, path: '/node', label: '节点管理', permiss: 'node' },
+  { icon: Tickets, path: '/config', label: '配置管理', permiss: 'config' },
+  { icon: UserFilled, path: '/user', label: '用户管理', permiss: 'user' },
+  { icon: Setting, path: '/role', label: '角色管理', permiss: 'role' },
+  { icon: Clock, path: '/audit', label: '审计日志', permiss: 'audit' },
 ];
 
 const route = useRoute();
